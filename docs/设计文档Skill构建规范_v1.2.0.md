@@ -4,28 +4,27 @@
 **制定日期**: 2026-05-07
 **取代版本**: v1.1.0 (2026-04-23)
 **适用范围**: 所有设计文档生成类 Skill（当前包括 ia-fe-generator、ia-fe-to-prd，未来新增的同类 Skill 一律遵循本规范）
-**约束级别**: 强制纲领。任何对 Skill 的新建、修改、扩展，均不得突破本规范的约束边界。
+**约束级别**: 强制纲领
 
 ---
 
 ## 版本变更摘要（v1.1.0 → v1.2.0）
 
-本次升级源于 v1.1.0 在多 Skill 协同、复杂场景路由、长期演进三个维度暴露的系统性缺陷。核心变更如下：
-
 | 变更分类 | 具体内容 | 影响章节 |
 |---|---|---|
-| **新增层级** | 增加可选的"场景路由层"，承载 modify/incremental 模式下的二级路由（如增量场景识别） | 1.2、3.5（新增） |
+| **新增层级** | 增加可选的"场景路由层"，承载 modify/incremental 模式下的二级路由 | 1.2、3.5（新增） |
 | **新增章节** | 第六章"跨 Skill 协同规范"——artifact 契约、上下游依赖、可选 Skill 依赖 | 第六章（新增） |
 | **新增章节** | 3.7 节"模式定义"——DELTA 格式形式化、modify_focus schema | 3.7（新增） |
 | **新增条款** | 4.7 节"引擎共享与同步机制"——明确 docs/engine-canonical/ 作为权威源 | 4.7（新增） |
+| **引擎扩展** | workflow-engine.md 新增 Phase 1.5 用户指定通道 | 3.2.1 |
 | **注册表扩展** | 从"5 个固定注册表"改为"5 个标准 + N 个 Skill 扩展" | 3.3 |
-| **字段补齐** | _template.md frontmatter 增加 for_scenario、dual_input_mode、backend_only 等可选字段 | 3.6（原 3.5） |
-| **字段补齐** | element-type-registry 增加 chapter_no_cn、sub_elements、always_affected_in、chapter_label_style 等字段 | 3.3.2 |
-| **正式化** | ongoing.md 给出正式 JSON Schema | 3.1.3 |
-| **设计哲学** | 前言增加"场景优先于工程抽象"、"用户产品语言"等设计原则 | 前言 |
+| **字段补齐** | _template.md frontmatter 增加 for_scenario、dual_input_mode、backend_only 等可选字段 | 3.6.1 |
+| **字段补齐** | element-type-registry 增加 chapter_no_cn、sub_elements、always_affected_in、chapter_label_style、backend_only 字段 | 3.3.2 |
+| **正式化** | ongoing.md 给出正式 Schema（含 Skill 命名空间隔离） | 3.1.3 |
+| **设计哲学** | 前言增加 5 条设计原则 | 前言 |
 | **附录新增** | 附录 C：v1.1 → v1.2 迁移指南 | 附录 C（新增） |
 
-**向后兼容性**: v1.2.0 的所有新增字段均为可选，现有 v1.1.0 兼容的 Skill 在不使用新功能时无需修改即可在 v1.2.0 框架下运行。建议参照附录 C 逐步迁移到完全 v1.2.0 兼容状态。
+**向后兼容性**: v1.2.0 新增字段均为可选，现有 v1.1.0 兼容的 Skill 在不使用新功能时无需修改即可运行。
 
 ---
 
@@ -33,24 +32,24 @@
 
 设计文档类 Skill 在构建和迭代过程中，常出现以下典型问题：
 
-- **职责越界**：要素的执行细节（如对话步骤、追问逻辑）被错误地写入引擎层（`element-runner.md`），导致引擎污染业务逻辑；
-- **层级混乱**：新场景、新要素不知道该加在哪里，随手塞入最近打开的文件；
-- **修改无约束**：发现问题后，模型凭直觉修改，打破原有架构，越改越乱；
-- **缺少指导纲领**：没有明确说明每层是什么、每个文件干什么、内容结构是什么；
-- **多 Skill 漂移（v1.2.0 新认知）**：当多个同类 Skill 共享引擎和注册表 schema 时，依赖纪律维护一致性是不可持续的，必须有机制保障；
-- **场景路由缺位（v1.2.0 新认知）**：v1.1.0 的"workflow → element_sequence"是单层路由，无法承载"用户描述变更 → 系统识别原子场景 → 计算受影响要素"这类复杂路由。
+- **职责越界**：要素的执行细节被错误地写入引擎层，引擎污染业务逻辑
+- **层级混乱**：新场景、新要素不知道该加在哪里
+- **修改无约束**：发现问题后凭直觉修改，越改越乱
+- **多 Skill 漂移（v1.2.0 新认知）**：当多个同类 Skill 共享引擎和注册表 schema 时，依赖纪律维护一致性是不可持续的，必须有机制保障
+- **场景路由缺位（v1.2.0 新认知）**：v1.1.0 的"workflow → element_sequence"是单层路由，无法承载"用户描述变更 → 系统识别原子场景 → 计算受影响要素"这类复杂路由
+- **用户主动指定不被承认（v1.2.0 新认知）**：v1.1.0 只有自动匹配 + 多候选消歧两条路径，用户主动指定 workflow 没有正式入口
 
-本规范的目标：**建立唯一权威的架构纲领**，使得任何层级的任何修改，都有据可依、有界可守；多个同类 Skill 共享的部分由机制（而非纪律）保障一致性。
+本规范的目标：**建立唯一权威的架构纲领**，使得任何层级的任何修改都有据可依、有界可守；多个同类 Skill 共享的部分由机制（而非纪律）保障一致性。
 
 ---
 
-## 设计原则（v1.2.0 新增）
+## 设计原则
 
 以下五条原则是规范的灵魂，所有具体条款都是这些原则的具体化：
 
 ### 原则 1：数据-控制绝对分离
 
-引擎只管"怎么执行"，绝不包含"执行什么业务"；注册表只管"注册元数据"，绝不包含执行逻辑；编排层只管"流程顺序"，绝不包含要素实现细节；实现层只管"具体规格和规范"，绝不包含流程控制。
+引擎只管"怎么执行"，不包含"执行什么业务"；注册表只管"注册元数据"，不包含执行逻辑；编排层只管"流程顺序"，不包含要素实现细节；实现层只管"具体规格和规范"，不包含流程控制。
 
 ### 原则 2：单一权威源（Single Source of Truth）
 
@@ -58,17 +57,15 @@
 
 ### 原则 3：场景优先于工程抽象
 
-设计与用户的交互界面时，优先使用用户能理解的产品语言（如"添加按钮打开表单"），而非工程抽象（如"C 类变更：新增子特性"）。系统内部可以做工程抽象，但**不得**作为用户交互界面。
-
-具体应用：增量场景下，让用户描述"想做什么"，系统识别为原子场景，再映射到工程层的受影响要素。这是 v1.2.0 引入"场景路由层"的根本动因。
+设计与用户的交互界面时，优先使用用户能理解的产品语言（如"添加按钮打开表单"），而非工程抽象（如"C 类变更：新增子特性"）。系统内部可以做工程抽象，但不得作为用户交互界面。
 
 ### 原则 4：跨 Skill 一致性优先于单 Skill 灵活性
 
-当多个同类 Skill 共享架构时，宁可牺牲单 Skill 的局部灵活性，也要保证共享部分的一致性。具体应用：引擎层用权威源 + 拷贝同步；Spec frontmatter 字段集合统一；Spec 模板字段定义统一。
+当多个同类 Skill 共享架构时，宁可牺牲单 Skill 的局部灵活性，也要保证共享部分的一致性。
 
 ### 原则 5：规范本身是 Living Document
 
-规范不应是"一次写完管 5 年"的静态文档。规范变更必须附带"哪些现有 Skill 受影响、迁移步骤是什么"。主版本号变更（v1 → v2）保留向后兼容期，至少跨 1 个迭代周期。
+规范变更必须附带"哪些现有 Skill 受影响、迁移步骤是什么"。主版本号变更（v1 → v2）保留向后兼容期。
 
 ---
 
@@ -78,16 +75,16 @@
 
 **数据与控制绝对分离（Data-Control Separation）**
 
-- 引擎层只管"怎么执行"，绝不包含"执行什么业务"；
-- 注册表只管"注册元数据"，绝不包含执行逻辑；
-- 编排层只管"流程顺序"，绝不包含要素实现细节；
-- 实现层只管"具体规格和规范"，绝不包含流程控制。
+- 引擎层只管"怎么执行"，绝不包含"执行什么业务"
+- 注册表只管"注册元数据"，绝不包含执行逻辑
+- 编排层只管"流程顺序"，绝不包含要素实现细节
+- 实现层只管"具体规格和规范"，绝不包含流程控制
 
 **三个"绝不"原则**
 
-1. 引擎层文件（Layer 2）绝不出现任何 `if requirement_type == 'TP'` 式的业务硬编码判断；
-2. 要素执行细节（交互步骤、追问逻辑、输出骨架）绝不出现在 Layer 2 和 Layer 3；
-3. 状态写入绝不发生在 `element-runner` Phase 6 之外的任何地方。
+1. 引擎层文件（Layer 2）绝不出现任何 `if requirement_type == 'TP'` 式的业务硬编码判断
+2. 要素执行细节（交互步骤、追问逻辑、输出骨架）绝不出现在 Layer 2 和 Layer 3
+3. 状态写入绝不发生在 `element-runner` Phase 6 之外的任何地方
 
 ### 1.2 五层架构模型 + 可选场景路由层
 
@@ -137,30 +134,25 @@
 
 ### 1.4 层间调用规则
 
-```
-合法调用链：
-Layer 1 → Layer 2（启动引擎）
-Layer 2 → Layer 3（读取注册表）
-Layer 2 → Layer 4（分发编排，仅 workflow-engine 执行）
-Layer 4 → Layer 2（调用 element-runner 循环执行要素）
-Layer 4 → Layer 3.5（仅 modify/incremental 工作流，读取场景路由数据）
-Layer 2 → Layer 3（Phase 1 匹配 Spec）
-Layer 2 → Layer 5（Phase 3/4/5 读取 Spec 内容）
-Layer 2 → Layer 5（Phase 3 调用 standards-loader 读取规范）
+**合法调用链**：
+- Layer 1 → Layer 2（启动引擎）
+- Layer 2 → Layer 3（读取注册表）
+- Layer 2 → Layer 4（分发编排）
+- Layer 4 → Layer 2（调用 element-runner 循环执行要素）
+- Layer 4 → Layer 3.5（仅 modify/incremental 工作流，读取场景路由数据）
+- Layer 2 → Layer 5（Phase 3/4/5 读取 Spec 内容）
 
-禁止的调用链：
-Layer 1 → Layer 4（入口层不得直接跳到编排层）
-Layer 1 → Layer 5（入口层不得直接调用实现层）
-Layer 4 → Layer 5（编排层不得直接读取 Spec；必须通过 element-runner）
-Layer 2 → Layer 3.5（引擎不得感知场景路由层；场景路由完全是 orchestration 内部行为）
-Layer 2 写入业务状态（引擎只在 Phase 6 写 frontmatter，不得另立状态文件）
-```
+**禁止的调用链**：
+- Layer 1 → Layer 4（入口层不得直接跳到编排层）
+- Layer 1 → Layer 5（入口层不得直接调用实现层）
+- Layer 4 → Layer 5（编排层不得直接读取 Spec；必须通过 element-runner）
+- Layer 2 → Layer 3.5（引擎不得感知场景路由层；场景路由完全是 orchestration 内部行为）
 
 ---
 
 ## 第二章 标准目录结构
 
-### 2.1 完整目录结构（所有 Skill 统一遵循）
+### 2.1 完整目录结构
 
 ```
 docs/
@@ -187,7 +179,7 @@ skills/{skill-name}/
 │
 │  ── Layer 3: 元数据注册层 ───────────────────────────────────
 ├── registry/
-│   │ ── 5 个标准注册表（必须存在）─────────────────────────
+│   │ ── 5 个标准注册表（必须）─────────────────────────────
 │   ├── workflow-registry.yaml
 │   ├── element-type-registry.yaml
 │   ├── spec-template-registry.yaml
@@ -246,8 +238,6 @@ skills/{skill-name}/
 ## 第三章 各层各文件详细规范
 
 ### Layer 1 — 入口层
-
----
 
 #### 3.1.1 SKILL.md
 
@@ -456,18 +446,106 @@ spec_compliance: "v1.2.0"
 所有路由判断完全基于 registry 数据驱动，禁止硬编码业务分支。
 
 ## Phase 1：构建 Input Inventory
-步骤：
-1. 读取 `config.yaml` 中的 `context.ongoing_file`，加载当前项目状态
-2. 按 `registry/input-type-registry.yaml` 中定义的探测规则，逐一检测每类输入源的存在状态
+1. 读取 config.yaml 中的 context.ongoing_file，加载当前项目状态
+2. 按 registry/input-type-registry.yaml 中定义的探测规则，逐一检测每类输入源的存在状态
 3. 构建 Input Inventory：{input_type_id: true/false, ...}
+
+## Phase 1.5：处理用户指定（v1.2.0 新增）
+
+本 Phase 专门处理用户主动指定 workflow 的情况。命中后跳过 Phase 2 自动匹配。
+
+### 1.5.1 提取用户指定意图
+
+按优先级顺序检查两个来源：
+
+**优先级 1：对话中明确指定（动态指定）**
+扫描 user_message，按以下顺序匹配：
+1. 直接 workflow_id 匹配：检查 user_message 是否包含某个 workflow.id 字符串
+2. 关键短语匹配：
+   - 中文："用 {x} 跑"、"走 {x} 流程"、"按 {x} 来做"、"切换到 {x}"
+   - 英文："use {x}"、"switch to {x}"、"run as {x}"
+3. workflow_name 匹配：检查 user_message 是否包含某个 workflow.name
+
+**优先级 2：ongoing.md 预声明（静态指定）**
+读取 ongoing.md.workflow_hint 字段（若存在）
+
+**优先级 3：无指定**
+进入 Phase 2 正常自动匹配
+
+⚠️ trigger_keywords 不属于"用户指定"——trigger_keywords 是消歧用的弱信号，
+处理时机在 Phase 2；"用户指定"是用户的强意图表达，处理时机在 Phase 1.5。
+
+### 1.5.2 解析为 workflow_id
+
+将提取的意图字符串映射到 workflow-registry 中的某个 id：
+1. 若意图字符串本身就是 workflow.id → 直接使用
+2. 若意图字符串是 workflow.name 的子串 → 反查 id
+3. 若映射失败 → 输出"未找到匹配的工作流：{意图字符串}"，进入 Phase 2
+
+### 1.5.3 校验合法性（强制三项校验）
+
+对解析出的 workflow_id，逐项校验：
+
+**校验 1：workflow 存在**
+- 不通过：输出"工作流 {id} 不存在于注册表"，进入 Phase 2
+
+**校验 2：status 不是 planned**（v1.2.0 强制：planned 完全禁止用户指定）
+- 不通过：输出错误信息并提供两个选项，**禁止降级绕过**：
+  ```
+  ⚠️ 工作流 {workflow_name}（{id}）尚未实现（status=planned），无法执行。
+  
+  可选项：
+    [A] 自动选择其他匹配的工作流
+    [Q] 退出
+  ```
+- 用户选 A 时进入 Phase 2，选 Q 时终止
+
+**校验 3：input_signature 严格满足**（v1.2.0 强制：用户指定不绕过 input_signature）
+- required 列表中所有 input_type 必须为 true
+- excluded 列表中所有 input_type 必须为 false
+- 不通过：输出友好错误信息，**禁止提供"强制忽略"选项**：
+  ```
+  ⚠️ 你指定了 {workflow_name}，但当前环境不满足启动条件：
+    缺少：{missing_input_name} —— {provision_guide}
+    冲突：{conflicting_input_name} 不应存在 —— {reason}
+  
+  可选项：
+    [A] 补齐输入后重试
+    [B] 自动选择其他匹配的工作流
+    [Q] 退出
+  ```
+- 用户选 A：终止本轮，由用户去解决环境后重新启动
+- 用户选 B：进入 Phase 2 自动匹配
+- 用户选 Q：终止
+
+**注意**：本规范明确禁止提供"强制忽略 input_signature"的选项。
+input_signature 是工作流的硬前置条件，绕过会导致 orchestration 走到一半失败。
+
+### 1.5.4 通过校验后的处理
+
+1. 将 workflow_id 写入 ongoing.md.workflow_hint
+2. 输出确认信息：
+   ```
+   ✅ 已按你的指定执行：{workflow_name}（{workflow_id}）
+   ```
+3. 直接进入 Phase 3（跳过 Phase 2 自动匹配）
+
+### 1.5.5 不通过/无指定时
+
+回退到 Phase 2 正常自动匹配。
+
+---
 
 ## Phase 2：执行 SceneRouter
 
+> 前置条件：Phase 1.5 未提取到有效的用户指定。
+> 若 Phase 1.5 已命中用户指定，本 Phase 跳过。
+
 ### 2.1 优先级遍历匹配
-按 `registry/workflow-registry.yaml` 中 `priority` 从高到低遍历所有 workflow：
+按 registry/workflow-registry.yaml 中 priority 从高到低遍历所有 workflow：
 - 跳过 status == "planned" 的 workflow
-- 检查 `input_signature.required`：所有 required input_type 必须为 true
-- 检查 `input_signature.excluded`：所有 excluded input_type 必须为 false
+- 检查 input_signature.required：所有 required input_type 必须为 true
+- 检查 input_signature.excluded：所有 excluded input_type 必须为 false
 - 记录所有满足条件的 workflow 为"候选集合"
 
 ### 2.2 三道消歧防线
@@ -550,26 +628,32 @@ spec_compliance: "v1.2.0"
 
 ## Phase 1：要素解析
 1. 以 element_id + execution_mode + context.requirement_type 为检索键
-2. 查询 `registry/spec-template-registry.yaml` 的 implements / for_type / execution_mode 字段
-3. 唯一命中一个 spec 文件路径，加载该 Spec
-4. 若无匹配，报错并终止
-5. 若匹配多个，报错并终止（注册表存在冲突）
+2. 查询 registry/spec-template-registry.yaml，匹配条件（三个条件均须满足）：
+   - implements 字段 == 当前 element_id
+   - for_type 列表中包含当前 context.requirement_type
+   - execution_mode 列表中包含当前 execution_mode
+   - status == "active"
+3. 唯一命中一个 spec_file 路径，加载该 Spec 文件
+4. 若无匹配 → 报错并终止
+5. 若匹配多个 → 报错并终止（注册表存在冲突）
 
 ---
 
 ## Phase 2：前置校验
-1. 读取 Spec Body 的 ## 前置条件 章节（禁止读取 Frontmatter）
-2. 逐项检查依赖要素表格：确认 stepsCompleted 中对应 element_id 已完成
-3. 检查必要输入列表：确认输入文档中对应章节/数据存在
-4. 检查跳过条件（若有）：满足条件则跳过本要素，直接输出跳过日志
-5. 任一必要前置不满足，提示用户并暂停，不继续执行
+1. 读取 Spec Body 的 ## 前置条件 章节（禁止读取 Spec Frontmatter）
+2. 逐项检查依赖要素表格：确认每个依赖的 element_id 已存在于 stepsCompleted 中
+3. 检查必要输入列表：确认 context 或输入文档中存在对应信息
+4. 检查跳过条件（若有）：满足则跳过本要素
+5. 任一必要前置不满足 → 暂停，等待用户处理
 
 ---
 
 ## Phase 3：规范注入
-1. 读取 Spec Body 的 ## 约束 → ### 格式规范 章节表格（禁止读取 Frontmatter）
-2. 提取 standard_id 列表，逐一调用 engine/standards-loader.md
-3. 将加载结果合并为 effective_constraints，供 Phase 4 执行时使用
+1. 读取 Spec Body 的 ## 约束 → ### 格式规范 表格
+2. 提取所有 standard_id，跳过值为"(暂无)"的行
+3. 对每个有效 standard_id，调用 engine/standards-loader.md 加载规范内容
+4. 将加载结果合并为 effective_constraints
+5. 若 standard_id 在注册表中不存在 → 记录警告，以 Spec 内 ## 约束 → ### 设计约束 兜底，不终止
 
 **规范注入声明**（必须输出，格式如下）：
 
@@ -590,41 +674,44 @@ spec_compliance: "v1.2.0"
 ---
 
 ## Phase 4：按模式执行
+
 1. 读取 Spec Body 的 ## 执行步骤 章节
-2. 根据 execution_mode（build / modify / incremental）走对应分支指令
+2. 根据 execution_mode（build / modify / incremental）走对应分支
 3. 严格按 Step 序列执行：
    - [自动] 步骤：模型自动执行
    - [交互] 步骤：必须等待用户响应，禁止跳过，禁止模型自行补全用户未确认的信息
      ⚠️ 具体的交互方式（菜单选项、自由文本、单选项等）由 Spec 自行定义，引擎不强制
-4. 执行过程中遵循 effective_constraints
+4. 执行中遵循 effective_constraints
 
-5. **章节结构强制规则**（对所有要素均适用，来自 context.chapter_info）：
+5. **章节结构强制规则**（来自 context.chapter_info）：
 
-   | 规则 | 说明 |
-   |------|------|
-   | 唯一 L1 章节 | 每个 element 输出且仅输出一个 L1 章节，格式：`## {l1_no}、{element_name}`（中文）或 `## {l1_no}. {element_name}`（阿拉伯） |
-   | 子要素为 L2 | sub_elements 中每项对应一个 L2 章节 |
-   | 禁止子要素升级 | 严禁将 sub_elements 拆分为独立 L1 章节 |
-   | 禁止跳过 L2 | 有 sub_elements 时，禁止跳过 L2 直接在 L1 下输出内容 |
-   | 禁止私自改编号 | 禁止使用 orchestration 未传入的章节编号 |
+| 规则 | 说明 |
+|------|------|
+| 唯一 L1 章节 | 每个 element 输出且仅输出一个 L1 章节，格式视 chapter_label_style：<br>- chinese: `## {l1_no}、{element_name}`（如"## 四、业务流程"）<br>- arabic: `## {l1_no}. {element_name}`（如"## 4. 业务流程"） |
+| 子要素为 L2 | sub_elements 中每项对应一个 L2 章节，格式：`### {l2_no} {name}` |
+| 禁止子要素升级 | **严禁**将 sub_elements 拆分为独立 L1 章节 |
+| 禁止跳过 L2 | 有 sub_elements 时，**禁止**跳过 L2 直接在 L1 下输出内容 |
+| 禁止私自改编号 | **禁止**使用 orchestration 未传入的章节编号 |
 
 6. 参照 Spec Body 的 ## 输出骨架 生成最终内容结构
 
-**强制完整迭代约束**：若某 Step 涉及遍历列表（如"逐活动生成明细"），必须完整遍历每一项，不得因数量多、内容相似或任何其他原因截断。
+**强制完整迭代约束**：若某 Step 涉及遍历列表，必须完整遍历每一项，不得因数量多、内容相似或任何其他原因截断。截断即视为执行未完成，须继续补全后方可进入 Phase 5。
 
 ---
 
-## Phase 5：质量验证
+## Phase 5：质量验证（强制，不可跳过）
 
-**验证规则的多源合并顺序（v1.2.0 正式化）**：
+本阶段采用独立验证机制，主 agent 根据 Spec 和 standards 内容执行检查逻辑。
+
+**验证规则的多源合并顺序**：
 1. 引擎通用检查（不可绕过，最先执行）
-2. effective_constraints（standards-loader 加载的格式规范）
+2. effective_constraints（Phase 3 加载的格式规范）
 3. Spec ## 约束 → ### 设计约束 中 MUST 级规则
 4. Spec ## 强制质量检查 checklist（最后执行）
 
 **冲突解决**：
 - 通用检查 vs Spec 约束冲突 → 通用检查优先
-- standards 规范 vs Spec 约束冲突 → 后者优先（Spec 可覆盖标准规范的细节）
+- standards 规范 vs Spec 约束冲突 → 后者优先
 - 同一来源内部矛盾 → 报错并终止
 
 ### 5.1 引擎通用检查（适用所有要素，MUST 级）
@@ -637,7 +724,7 @@ spec_compliance: "v1.2.0"
 
 **章节结构检查**：
 - 是否只有一个 L1 标题
-- L1 标题格式是否符合 chapter_info
+- L1 标题格式是否符合 chapter_info（含 chapter_label_style）
 - sub_elements 是否均以 L2 标题呈现
 - 是否存在未授权的额外 L1 标题
 
@@ -649,7 +736,7 @@ spec_compliance: "v1.2.0"
 对照 Phase 3 加载的 effective_constraints 逐项验证。
 
 ### 5.3 设计约束检查
-- 逐一核对 Spec ## 约束 → ### 设计约束 表格中所有 级别=MUST 的规则
+- 逐一核对 Spec ## 约束 → ### 设计约束 表格中所有级别=MUST 的规则
 - 逐一核对 Spec ## 强制质量检查 中所有 ✅ 项
 
 ### 5.4 验证结果处理
@@ -658,7 +745,7 @@ spec_compliance: "v1.2.0"
 若存在不通过项 → 立即暂停，输出问题详情，等待用户处理
 
 **Phase 5 绝对禁止**：
-- 禁止在本文件中出现任何 element_id 的名称
+- 禁止在本文件中出现任何 element_id 的名称（如 `if element_id == "business-process"`）
 - 所有专项验证规则必须来自 Spec 数据，由引擎数据驱动执行
 - 引擎只执行"如何验证"，"验证什么"完全由 Spec 数据决定
 
@@ -726,6 +813,8 @@ spec_compliance: "v1.2.0"
 本文件是规范热插拔加载引擎，完全业务无感知。
 支持用户私有扩展以最高优先级覆盖系统内置规范。
 
+> standards-loader 不读取 spec frontmatter，standard_id 由 element-runner Phase 3 从 spec body 的 ## 约束 → ### 格式规范 表格中提取后传入。
+
 ## 调用接口
 输入：standard_id（字符串，由 element-runner Phase 3 传入）
 输出：规范文件内容（effective_standard）
@@ -738,9 +827,26 @@ spec_compliance: "v1.2.0"
 3. 若存在映射，直接加载对应文件内容，立即返回，不再继续查询
 
 ### Level 2：系统内置规范（兜底）
-1. 查询 registry/standards-registry.yaml 中 standard_id 的 file_path
+1. 查询 registry/standards-registry.yaml 中 standard_id 对应的 file_path
 2. 加载对应 standards/{file}.md 文件内容
 3. 若 standard_id 不存在于注册表，输出警告日志，返回空约束，不阻断流程
+
+## 合并规则
+- 同一 standard_id 下：结构规则以 extend 优先；示例可并存；检查点去重后合并
+- 最终返回合并后的 effective_standard
+
+## 输出格式
+```yaml
+effective_constraints:
+  standards:
+    - standard_id: ""
+      source: "builtin|extend|merged"
+      summary: ""
+  checkpoints:
+    - id: ""
+      level: "MUST|SHOULD|MUST_NOT"
+      rule: ""
+```
 
 ## 热插拔原则
 企业团队可在不触碰 Skill 核心框架的前提下，
@@ -760,33 +866,41 @@ spec_compliance: "v1.2.0"
 
 #### 3.3.1 registry/workflow-registry.yaml
 
-（同 v1.1.0，无变化）
-
 **内容结构**：
 
 ```yaml
 workflows:
-  - id: "{workflow-id}"
-    name: "{场景名称}"
-    priority: {整数}
+  - id: "{workflow-id}"                    # [必填] 唯一标识
+    name: "{场景名称}"                      # [必填]
+    priority: {整数}                        # [必填] 路由优先级
+    
     input_signature:
       required:
         - id: "{input_type_id}"
-          reason: "{为什么必须存在此输入}"
+          reason: "{为什么必须存在}"
       excluded:
         - id: "{input_type_id}"
           reason: "{为什么此输入存在时不走本 workflow}"
       optional:
         - id: "{input_type_id}"
           reason: "{此输入存在时的作用}"
-    trigger_keywords: ["{关键词1}", "{关键词2}"]
-    orchestration_file: "orchestration/{o-xxx}.md"
-    element_sequence:
+    
+    trigger_keywords: ["{关键词1}", "{关键词2}"]  # [必填] Phase 2 消歧用，非用户指定
+    
+    orchestration_file: "orchestration/{o-xxx}.md"  # [必填]
+    
+    element_sequence:                       # [建议]
       - element_id: "{element-id}"
         optional: {true/false}
-    resume_mode: {true/false}
-    status: "active"
+    
+    resume_mode: {true/false}              # [可选] 默认 false
+    status: "active"                       # [必填] active / planned
 ```
+
+**注意事项**：
+- `status: planned` 的 workflow 不参与路由匹配
+- priority 值不得重复
+- 续接恢复 workflow 优先级建议最高（100）
 
 ---
 
@@ -818,60 +932,114 @@ element_types:
 
 **字段说明**：
 
-| 字段 | v1.x | 说明 |
+| 字段 | 必/选 | 说明 |
 |---|---|---|
-| chapter_no_cn | v1.2 新增 | 中文章节编号，由 orchestration 读取后填入 chapter_info.l1_no |
-| chapter_label_style | v1.2 新增 | 章节标题风格，影响 element-runner Phase 4 的章节标题渲染 |
-| sub_elements | v1.2 新增 | 子章节定义，由 orchestration 读取后填入 chapter_info.sub_elements |
-| backend_only | v1.2 新增 | 提升到注册表层（v1.1 在 chapter_info 临时填充） |
-| always_affected_in | v1.2 新增 | 用于 modify/incremental 场景，标记永远受影响的要素（如 story-design） |
+| chapter_no | 必填 | 章节序号（整数），决定执行顺序 |
+| chapter_no_cn | 必填 | 中文章节编号，由 orchestration 读取后填入 chapter_info.l1_no |
+| chapter_label_style | 必填 | 章节标题渲染风格："chinese"用"四、业务流程"，"arabic"用"4. 业务流程" |
+| sub_elements | 可选 | 子章节定义。无子章节时省略；有则由 orchestration 填入 chapter_info.sub_elements |
+| backend_only | 可选 | true 时 Phase 6 仅更新 frontmatter，不写正文 |
+| always_affected_in | 可选 | 在哪些模式下永远受影响（如 ["modify", "incremental"]）|
 
 ---
 
 #### 3.3.3 registry/spec-template-registry.yaml
 
-（同 v1.1.0，无变化）
+**用途**：Spec 模板路由注册表。定义 element-id + requirement_type + execution_mode 三维检索键到具体 spec 文件路径的映射关系，是 element-runner Phase 1 解析的唯一数据来源。
+
+**定位**：纯数据注册表。只存映射元数据，不包含任何执行逻辑或 Spec 内容。
+
+**依赖**：
+- 被 `engine/element-runner.md` Phase 1 读取（匹配 spec_file 路径）
+- 数据一致性依赖：`implements` 字段必须与 `element-type-registry.yaml` 中某个 `id` 严格对齐
+- 文件存在性依赖：`spec_file` 字段指向的文件必须存在于 `spec/` 目录
+
+**内容结构（强制约束）**：
 
 ```yaml
 spec_templates:
-  - implements: "{element-id}"
-    for_type: ["{类型1}"]
-    execution_mode: ["{mode1}", "{mode2}"]
-    spec_file: "spec/{m-xxx}.md"
-    status: "active"
+  - implements: "{element-id}"        # [必填] 与 element-type-registry id 对齐
+    for_type: ["{类型1}"]              # [必填] 适用需求类型列表
+    execution_mode: ["{mode1}"]        # [必填] 适用执行模式列表
+    spec_file: "spec/{m-xxx}.md"       # [必填] Spec 文件相对路径
+    status: "active"                   # [必填] active / planned（planned 不参与路由）
 ```
+
+**注意事项**：
+- 同一 `implements` 可有多条记录（对应不同 `for_type` 或 `execution_mode`），element-runner Phase 1 取三个维度均匹配的唯一记录
+- 若匹配到多条记录且三条检索键完全一致 → 报错终止（注册表冲突）
+- 若 `spec_file` 指向的文件不存在 → element-runner Phase 1 报错终止
+- `status: planned` 的记录不参与路由匹配（element-runner 应跳过）
+- 禁止在注册表中包含任何 Spec 内容（如执行步骤、约束规则），这些内容必须写在对应 `spec_file` 内
 
 ---
 
 #### 3.3.4 registry/input-type-registry.yaml
 
-（同 v1.1.0，无变化）
+**用途**：输入源类型注册表。定义 workflow-engine 在构建 Input Inventory 时需要探测的所有输入源类型，以及每种输入源的探测规则。用于 workflow-registry 的 `input_signature` 条件匹配。
+
+**定位**：纯数据注册表。只存输入类型元数据和探测规则，不包含探测执行逻辑（探测由 workflow-engine Phase 1 执行）。
+
+**依赖**：
+- 被 `engine/workflow-engine.md` Phase 1 读取（构建 Input Inventory）
+- 被 `registry/workflow-registry.yaml` 的 `input_signature.required/excluded/optional` 字段引用
+- 探测执行依赖：`detect_rules` 中 `path` 字段的路径必须在 Skill 上下文中有意义（如 workspace/ongoing.md、上游 artifact 路径等）
+
+**内容结构（强制约束）**：
 
 ```yaml
 input_types:
-  - id: "{INPUT_TYPE_ID}"
-    name: "{输入类型名称}"
-    description: "{描述}"
-    detect_rules:
-      - type: "file_exists"
-        path: "{路径或路径模式}"
-        condition: "{判断条件}"
+  - id: "{INPUT_TYPE_ID}"             # [必填] 唯一标识符，大写加下划线，供 workflow-registry 引用
+    name: "{输入类型名称}"             # [必填] 人类可读名称
+    description: "{描述}"             # [必填] 说明此输入类型代表什么
+    detect_rules:                     # [必填] 探测规则列表（满足任一则认为此输入存在）
+      - type: "file_exists"           # [必填] 探测类型：file_exists / dir_not_empty / frontmatter_field / dialog_input
+        path: "{路径或路径模式}"       # [必填] 视 type 提供对应参数
+        condition: "{判断条件}"       # [可选] 附加判断条件（如 frontmatter 字段值）
 ```
+
+**注意事项**：
+- `id` 命名规范：大写字母 + 下划线，建议遵循 `{DOC_TYPE}_{状态}` 模式（如 `FE_DOC_COMPLETED`）
+- `detect_rules` 列表中满足任一规则即认为此输入存在（OR 关系）
+- 探测类型说明：
+  - `file_exists`：检查文件是否存在（`path` 为文件路径）
+  - `dir_not_empty`：检查目录非空（`path` 为目录路径）
+  - `frontmatter_field`：检查文档 frontmatter 字段是否存在/符合条件（`path` 为文档路径，`condition` 为字段判断逻辑）
+  - `dialog_input`：用户对话输入（无需探测，始终为 true）
+- 禁止在注册表中包含探测执行代码或自然语言探测步骤（探测由 workflow-engine 数据驱动执行）
+- 新增输入类型后，需同步更新相关 workflow 的 `input_signature` 字段
 
 ---
 
 #### 3.3.5 registry/standards-registry.yaml
 
-（同 v1.1.0，无变化）
+**用途**：设计规范字典注册表。定义 standard_id 到系统内置规范文件路径的映射，是 standards-loader Level 2 查询的唯一数据来源。
+
+**定位**：纯数据注册表。只存规范元数据和文件路径，不包含规范内容（规范内容在 `standards/{xxx}-standard.md` 文件内）。
+
+**依赖**：
+- 被 `engine/standards-loader.md` Level 2 查询（当用户扩展未覆盖时兜底加载）
+- 被 `spec/*.md` 的 `## 约束 → ### 格式规范` 表格引用（standard_id 列）
+- 文件存在性依赖：`file_path` 字段指向的文件必须存在于 `standards/` 目录
+
+**内容结构（强制约束）**：
 
 ```yaml
 standards:
-  - id: "{standard-id}"
-    name: "{规范名称}"
-    file_path: "standards/{xxx}-standard.md"
-    description: "{规范适用范围描述}"
-    version: "{版本号}"
+  - id: "{standard-id}"               # [必填] 唯一规范标识符，与 spec body 中 standard_id 列对齐
+    name: "{规范名称}"                  # [必填] 人类可读名称
+    file_path: "standards/{xxx}-standard.md"  # [必填] 规范文件相对路径
+    description: "{规范适用范围}"       # [必填] 说明此规范适用于哪些要素/场景
+    version: "{版本号}"                # [建议] 规范版本号（便于追溯）
 ```
+
+**注意事项**：
+- `id` 命名规范：小写字母 + 连字符（如 `er-diagram-standard`）
+- `id` 必须与引用它的 Spec 文件 `## 约束 → ### 格式规范` 表格中 `standard_id` 列严格对齐
+- 若 `file_path` 指向的文件不存在 → standards-loader 返回警告日志，不阻断流程（以 Spec 内设计约束兜底）
+- 用户可通过 `workspace/extend-rule/INDEX.md` 覆盖内置规范（优先级高于本注册表）
+- 禁止在注册表中包含规范内容或验证规则（这些内容必须写在对应 `standards/{xxx}-standard.md` 文件内）
+- 新增规范后，需同步创建 `standards/{xxx}-standard.md` 文件，并在本注册表中注册
 
 ---
 
@@ -879,17 +1047,17 @@ standards:
 
 **通用要求**：
 - 必须在 `config.yaml` 的 `extension_registry:` 区块显式声明
-- 必须有明确的消费层（被哪个 orchestration 或 spec 加载）
-- 必须有"模式适用范围"说明（如"仅 modify 模式使用"）
-- 命名遵循 `{purpose}-registry.yaml` / `{purpose}-graph.yaml` / `{purpose}-mapping.yaml` 三种后缀之一
+- 必须有明确的消费层
+- 必须有"模式适用范围"说明
+- 命名遵循 `{purpose}-registry.yaml` / `{purpose}-graph.yaml` / `{purpose}-mapping.yaml`
 
-**v1.2.0 已知扩展注册表清单**：
+**v1.2.0 已知扩展注册表**：
 
 ##### 3.3.6.1 dependency-graph.yaml（级联影响关系）
 
 **用途**：定义要素之间的级联影响关系，用于 modify 模式做影响范围分析；用于 incremental 模式作为场景路由的安全网（详见 3.5.3）。
 
-**消费层**：orchestration/o-{review-modify}.md、orchestration/o-{incremental-build}.md
+**消费层**：orchestration 中处理 modify / incremental 模式的编排文件
 
 **适用模式**：modify、incremental
 
@@ -976,7 +1144,7 @@ scene_element_mappings:
 
 ---
 
-#### 3.5.3 场景路由四步流程（标准算法）
+#### 3.5.3 场景路由四步流程
 
 任何使用场景路由层的 orchestration 都应实现以下四步流程：
 
@@ -1140,14 +1308,24 @@ output_contract_version: "1.0.0"       # v1.2.0：仅当本 Spec 产出契约性
 
 ## 前置条件
 **依赖要素**
+| 依赖要素 element_id | 原因 |
+|----------------------|------|
+
 **必要输入**
+
 **跳过条件**（可选）
 
 ---
 
 ## 约束
+
 ### 格式规范
+| standard_id | 规范说明 |
+|-------------|---------|
+
 ### 设计约束
+| 约束编号 | 级别 | 规则 | 验证方法 |
+|----------|------|------|---------|
 
 ---
 
@@ -1172,7 +1350,7 @@ output_contract_version: "1.0.0"       # v1.2.0：仅当本 Spec 产出契约性
 
 **特殊情况：backend_only 要素**
 
-对于 `element-type-registry` 中标记 `backend_only: true` 的要素（如 requirement-type 类型判定），其 Spec 的 `## 输出骨架` 章节应写明：
+对于 element-type-registry 中标记 `backend_only: true` 的要素，其 Spec 的 `## 输出骨架` 章节应写明：
 
 ```markdown
 ## 输出骨架
@@ -1203,15 +1381,102 @@ output_contract_version: "1.0.0"       # v1.2.0：仅当本 Spec 产出契约性
 
 ---
 
-#### 3.6.2 standards/{standard-id}-standard.md（设计规范文件）
+#### 3.6.2 standards/{standard-id}-standard.md
 
-（同 v1.1.0，无变化）
+**用途**：系统内置设计规范文件。定义特定输出格式（如 ER 图、架构图、表格样式）的具体规则、正确示例、错误示例和验证检查点。可被用户私有扩展覆盖。
+
+**定位**：规范资产层。被 standards-loader 加载后注入给 element-runner Phase 3/5 使用，是要素执行时的"格式约束库"。
+
+**依赖**：
+- 被 `engine/standards-loader.md` Level 2 加载（当用户扩展未覆盖时）
+- 被 `registry/standards-registry.yaml` 注册（提供 id 和 file_path 映射）
+- 被 `spec/*.md` 的 `## 约束 → ### 格式规范` 表格引用（standard_id 列）
+- 用户扩展覆盖：若 `workspace/extend-rule/INDEX.md` 中存在同名 standard_id 映射，则本文件被屏蔽（用户扩展优先级更高）
+
+**内容结构（强制约束）**：
+
+```markdown
+---
+standard_id: "{standard-id}"    # [必填] 与 standards-registry 中 id 一致
+name: "{规范名称}"               # [必填] 人类可读名称
+version: "{版本号}"              # [必填] 规范版本号（便于追溯和兼容性判断）
+---
+
+# {standard-id} — {规范名称}
+
+## 适用范围
+{说明本规范适用于哪些要素、哪些场景、哪些输出格式}
+
+## 规则定义
+
+### {规则分类1}
+{具体规则描述，包含正确示例和错误示例}
+
+```示例
+{正确格式的实际示例代码块}
+```
+
+```错误示例
+{不符合规范的示例，标注错误原因}
+```
+
+### {规则分类2}
+{按需要继续添加规则分类}
+
+## 禁止事项
+
+- {明确禁止的做法1}
+- {明确禁止的做法2}
+
+## 验证检查点
+
+- [ ] {可自动验证的检查项1}
+- [ ] {可自动验证的检查项2}
+- [ ] {需要人工确认的检查项}
+```
+
+**注意事项**：
+- `standard_id` 必须与文件名中的 `{standard-id}` 一致（如文件名 `er-diagram-standard.md` 则 frontmatter 中 `standard_id: "er-diagram-standard"`）
+- 规范内容应具体可验证，避免抽象描述（如"ER图必须清晰"应改为"ER图节点必须包含主键标注"）
+- 示例代码块应使用实际 Markdown 或 Mermaid 语法，便于 element-runner Phase 5 自动验证
+- 用户扩展覆盖时，本文件完全被屏蔽（不会合并），如需部分覆盖请在用户扩展文件中手动复制保留部分
+- 禁止在规范文件中包含执行逻辑或 Prompt 指令（规范只描述"验证什么"，element-runner Phase 5 决定"如何验证"）
+- 版本号建议使用语义化版本（如 1.0.0），规范内容变更时更新版本号并记录变更日志
 
 ---
 
-#### 3.6.3 workspace/extend-rule/INDEX.md（用户扩展索引）
+#### 3.6.3 workspace/extend-rule/INDEX.md
 
-（同 v1.1.0，无变化）
+**用途**：用户私有规范扩展索引文件。定义 standard_id 到用户自定义规范文件的映射，实现"用户扩展 > 系统内置"的规范优先级，无需修改 Skill 核心文件即可覆盖任意规范。
+
+**定位**：用户扩展层入口。被 standards-loader Level 1 优先查询，若找到映射则直接加载用户文件，屏蔽系统内置规范。
+
+**依赖**：
+- 被 `engine/standards-loader.md` Level 1 读取（最高优先级查询）
+- 被 `config.yaml` 的 `standards.extend_index` 字段声明路径
+- 用户自定义文件依赖：表格中"自定义规范文件路径"列指向的文件必须存在，否则 standards-loader 报错
+
+**内容结构（强制约束）**：
+
+```markdown
+# 用户规范扩展索引
+
+本索引定义用户自定义规范对系统内置规范的覆盖关系。
+standards-loader 按本索引映射优先加载用户扩展文件，内置规范被屏蔽。
+
+| standard_id | 自定义规范文件路径 | 覆盖原因 |
+|-------------|-------------------|----------|
+| {standard-id} | workspace/extend-rule/{custom-file}.md | {为什么要覆盖内置规范，如企业特定格式要求} |
+```
+
+**注意事项**：
+- `standard_id` 必须与 `registry/standards-registry.yaml` 中某个已注册的 id 对齐（仅能覆盖已存在的规范）
+- 自定义规范文件必须遵循与系统内置规范相同的结构（包含适用范围/规则定义/禁止事项/验证检查点）
+- 一旦在本索引中添加映射，对应系统内置规范完全被屏蔽（不会合并），如需部分保留请在自定义文件中手动复制
+- 自定义规范文件路径建议使用相对路径（相对于 Skill 根目录），便于跨环境迁移
+- 禁止在本索引中包含任何规范内容或验证逻辑（只存映射关系）
+- 新增扩展后无需修改任何 Skill 核心文件（这是热插拔设计的核心价值）
+- 删除扩展映射即可恢复使用系统内置规范（移除表格对应行即可）
 
 ---
 
@@ -1354,30 +1619,35 @@ impact_analysis:
 
 ### 4.4 已有要素的 Spec 规格扩展
 
-（同 v1.1.0，无变化）
+1. 确定修改目标：执行步骤问题 → ## 执行步骤；约束规则问题 → ## 约束；输出格式问题 → ## 输出骨架 或 standards/
+2. 层级约束：仅在 Layer 5 修改，禁止修改 Layer 2
+3. 关联同步：若涉及 frontmatter 或 standard_id 引用，同步更新对应注册表
+4. 版本记录：结构性改动时更新 frontmatter 的 version
 
 ### 4.5 设计规范扩展
 
-（同 v1.1.0，无变化）
+1. 文件位置：`workspace/extend-rule/`，命名 `{standard-id}-standard.md`
+2. 索引注册：必须在 `workspace/extend-rule/INDEX.md` 添加映射
+3. 覆盖优先级：用户扩展高于内置
+4. 禁止：直接修改 `standards/` 下文件；引用不存在路径；包含执行逻辑
 
 ### 4.6 排查和修复 Skill 问题
 
-**问题定位矩阵**（v1.2.0 更新）：
-
 | 症状 | 定位层 | 修改目标文件 |
 |------|--------|-------------|
-| Skill 未正确触发 | Layer 1 / Layer 3 | SKILL.md 触发词；workflow-registry.yaml 的 trigger_keywords 或 priority |
-| 进入了错误的 workflow | Layer 2 / Layer 3 | workflow-engine.md 消歧逻辑；workflow-registry.yaml 的 input_signature |
-| 章节编号错乱 | Layer 3 | element-type-registry.yaml 的 chapter_no / chapter_no_cn / sub_elements |
-| 要素执行顺序错误 | Layer 3 / Layer 4 | workflow-registry.yaml 的 element_sequence；orchestration 的循环逻辑 |
+| Skill 未正确触发 | Layer 1 / Layer 3 | SKILL.md 触发词；workflow-registry trigger_keywords |
+| 进入了错误的 workflow | Layer 2 / Layer 3 | workflow-engine 消歧逻辑；workflow-registry input_signature |
+| 用户指定的 workflow 未被识别 | Layer 2 | workflow-engine.md Phase 1.5 |
+| 章节编号错乱 | Layer 3 | element-type-registry chapter_no_cn / sub_elements |
+| 要素执行顺序错误 | Layer 3 / Layer 4 | workflow-registry element_sequence；orchestration 循环逻辑 |
 | 要素跳过条件不正确 | Layer 5 | spec/{m-xxx}.md 的 ## 前置条件 → 跳过条件 |
 | 要素输出格式不符合预期 | Layer 5 | spec/{m-xxx}.md 的 ## 输出骨架 或 ## 约束 |
 | 追问逻辑不合理 | Layer 5 | spec/{m-xxx}.md 的 ## 执行步骤 或 ## 追问维度 |
-| 规范格式（如 ER 图）不正确 | Layer 5 | standards/{standard-id}-standard.md |
+| 规范格式不正确 | Layer 5 | standards/{standard-id}-standard.md |
 | 状态写入错误 | Layer 2 | element-runner.md 的 Phase 6 |
 | 路径引用错误 | Layer 1 | config.yaml |
-| 引擎在两个 Skill 表现不一致 | Layer 2 | docs/engine-canonical/，并同步到所有 Skill（详见 4.7） |
-| 增量场景识别不准 | Layer 3.5 | change-scene-registry.yaml / scene-element-mapping.yaml |
+| 引擎在两个 Skill 表现不一致 | Layer 2 | docs/engine-canonical/，并同步到所有 Skill |
+| 增量场景识别不准 | Layer 3.5 | change-scene-registry / scene-element-mapping |
 | 跨 Skill artifact 不兼容 | 第六章 | output-contract.yaml / config.yaml.upstream_dependencies |
 
 ---
