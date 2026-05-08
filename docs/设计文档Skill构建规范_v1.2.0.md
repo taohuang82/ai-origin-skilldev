@@ -23,6 +23,7 @@
 | **正式化** | ongoing.md 给出正式 Schema（含 Skill 命名空间隔离） | 3.1.3 |
 | **设计哲学** | 前言增加 5 条设计原则 | 前言 |
 | **附录新增** | 附录 C：v1.1 → v1.2 迁移指南 | 附录 C（新增） |
+| **术语收敛** | 原子变化场景→原子变化点；ChangePoint+ForbiddenItem→ImpactPoint(kind);原则 3 改名；ENGINE-VERSION→2.1.0 | 前言、原则 3、3.5、3.7.3、附录 |
 
 **向后兼容性**: v1.2.0 新增字段均为可选，现有 v1.1.0 兼容的 Skill 在不使用新功能时无需修改即可运行。
 
@@ -36,7 +37,7 @@
 - **层级混乱**：新场景、新要素不知道该加在哪里
 - **修改无约束**：发现问题后凭直觉修改，越改越乱
 - **多 Skill 漂移（v1.2.0 新认知）**：当多个同类 Skill 共享引擎和注册表 schema 时，依赖纪律维护一致性是不可持续的，必须有机制保障
-- **场景路由缺位（v1.2.0 新认知）**：v1.1.0 的"workflow → element_sequence"是单层路由，无法承载"用户描述变更 → 系统识别原子场景 → 计算受影响要素"这类复杂路由
+- **变化点路由缺位（v1.2.0 新认知）**：v1.1.0 的"workflow → element_sequence"是单层路由，无法承载"用户描述变更 → 系统识别原子变化点 → 计算受影响要素"这类复杂路由
 - **用户主动指定不被承认（v1.2.0 新认知）**：v1.1.0 只有自动匹配 + 多候选消歧两条路径，用户主动指定 workflow 没有正式入口
 
 本规范的目标：**建立唯一权威的架构纲领**，使得任何层级的任何修改都有据可依、有界可守；多个同类 Skill 共享的部分由机制（而非纪律）保障一致性。
@@ -55,9 +56,11 @@
 
 每一个事实只在一个地方定义。章节编号在 element-type-registry 定义，则 orchestration 必须动态读取，不得复制一份硬编码；引擎是共享资产，则有一份权威源，Skill 内的引擎是物理拷贝，由同步机制保障一致。
 
-### 原则 3：场景优先于工程抽象
+### 原则 3：产品语言优先于工程抽象
 
 设计与用户的交互界面时，优先使用用户能理解的产品语言（如"添加按钮打开表单"），而非工程抽象（如"C 类变更：新增子特性"）。系统内部可以做工程抽象，但不得作为用户交互界面。
+
+> **应用举例**：增量需求识别时，让用户描述"在订单页加导出按钮"（产品语言），系统将其映射为原子变化点 UI-01（工程抽象），再映射到受影响要素清单。用户全程无需感知工程抽象。
 
 ### 原则 4：跨 Skill 一致性优先于单 Skill 灵活性
 
@@ -113,9 +116,9 @@
 │              │  │     │（可选）   │  │                           │
 │              │  │     ▼           │  │                           │
 │              │  │  Layer 3.5      │  │                           │
-│              │  │  场景路由层     │  │                           │
-│              │  │ change-scene-*  │  │                           │
-│              │  │ scene-element-* │  │                           │
+│              │  │  变化点路由层   │  │                           │
+│              │  │ atomic-change-* │  │                           │
+│              │  │ change-element-*│  │                           │
 │              │  │ [仅 modify/    │  │                           │
 │              │  │  incremental用]│  │                           │
 └──────────────┘  └────────────────┘  └───────────────────────────┘
@@ -128,7 +131,7 @@
 | Layer 1 | 入口层 | 触发声明、全局约束、路径配置、项目状态锚点 | 禁止包含任何业务执行逻辑；禁止直接调用 Layer 4/5 |
 | Layer 2 | 引擎注入层 | 场景路由、要素六阶段执行、规范热加载。完全数据驱动，零硬编码 | 禁止写入任何特定 Skill 的业务判断；禁止在 Phase 6 之外写状态；**禁止依赖任何特定客户端工具的硬编码（如 AskUserQuestion 等具体工具名）** |
 | Layer 3 | 元数据注册层 | 注册所有元数据（场景、要素、规格映射、输入类型、规范字典）。YAML 格式，只存数据 | 禁止包含任何执行逻辑或 Prompt 指令 |
-| Layer 3.5 | 场景路由层（可选） | 定义 modify/incremental 模式下的原子变更场景目录，以及场景到要素的映射 | 仅供 orchestration 层在特定模式下读取，不影响其他场景；禁止包含执行逻辑 |
+| Layer 3.5 | 变化点路由层（可选） | 定义 modify/incremental 模式下的原子变化点目录，以及变化点到要素的映射 | 仅供 orchestration 层在特定模式下读取，不影响其他场景；禁止包含执行逻辑 |
 | Layer 4 | 场景编排层 | 定义特定工作流的宏观执行顺序（初始化→要素循环→完成）。调用 element-runner | 禁止包含要素实现细节；禁止直接操作文档内容；禁止绕过 element-runner |
 | Layer 5 | 设计实现层 | 每个要素的完整规格书（目标/前置/约束/步骤/骨架）以及设计规范资产 | 禁止包含流程控制逻辑；禁止引用其他 Spec 的执行步骤 |
 
@@ -139,14 +142,14 @@
 - Layer 2 → Layer 3（读取注册表）
 - Layer 2 → Layer 4（分发编排）
 - Layer 4 → Layer 2（调用 element-runner 循环执行要素）
-- Layer 4 → Layer 3.5（仅 modify/incremental 工作流，读取场景路由数据）
+- Layer 4 → Layer 3.5（仅 modify/incremental 工作流，读取变化点路由数据）
 - Layer 2 → Layer 5（Phase 3/4/5 读取 Spec 内容）
 
 **禁止的调用链**：
 - Layer 1 → Layer 4（入口层不得直接跳到编排层）
 - Layer 1 → Layer 5（入口层不得直接调用实现层）
 - Layer 4 → Layer 5（编排层不得直接读取 Spec；必须通过 element-runner）
-- Layer 2 → Layer 3.5（引擎不得感知场景路由层；场景路由完全是 orchestration 内部行为）
+- Layer 2 → Layer 3.5（引擎不得感知变化点路由层；变化点路由完全是 orchestration 内部行为）
 
 ---
 
@@ -187,9 +190,9 @@ skills/{skill-name}/
 │   ├── standards-registry.yaml
 │   │
 │   │ ── N 个 Skill 扩展注册表（按需）─────────────────────
-│   ├── dependency-graph.yaml       # 可选：级联影响关系
-│   ├── change-scene-registry.yaml  # 可选：原子变更场景目录（场景路由层）
-│   └── scene-element-mapping.yaml  # 可选：场景→要素映射（场景路由层）
+│   ├── dependency-graph.yaml         # 可选：级联影响关系
+│   ├── atomic-change-registry.yaml   # 可选：原子变化点目录（变化点路由层）
+│   └── change-element-mapping.yaml   # 可选：变化点→要素映射（变化点路由层）
 │
 │  ── Layer 4: 场景编排层 ─────────────────────────────────────
 ├── orchestration/
@@ -224,7 +227,7 @@ skills/{skill-name}/
 | Spec 文件 | `m-{doc-type}-{element-id}.md`，element-id 与 element-type-registry 中的 id 一致 | `m-fe-business-process.md` |
 | 规范文件 | `{standard-id}-standard.md`，standard-id 与 standards-registry 中的 id 一致 | `er-diagram-standard.md` |
 | 标准注册表 | 固定命名（5 个） | `workflow-registry.yaml` 等 |
-| 扩展注册表 | `{purpose}-registry.yaml` 或 `{purpose}-graph.yaml` 或 `{purpose}-mapping.yaml` | `change-scene-registry.yaml` |
+| 扩展注册表 | `{purpose}-registry.yaml` 或 `{purpose}-graph.yaml` 或 `{purpose}-mapping.yaml` | `atomic-change-registry.yaml` |
 | 引擎文件 | 固定命名（3 个） | `workflow-engine.md` 等 |
 
 **命名约束**：
@@ -335,8 +338,8 @@ registry:
 extension_registry:
   # 必须显式声明，未声明的 .yaml 文件不得被加载
   # dependency_graph: "registry/dependency-graph.yaml"
-  # change_scenes: "registry/change-scene-registry.yaml"
-  # scene_element_mapping: "registry/scene-element-mapping.yaml"
+  # atomic_changes: "registry/atomic-change-registry.yaml"
+  # change_element_mapping: "registry/change-element-mapping.yaml"
 
 # ── 规范资产路径 ─────────────────────────────────────────────────
 standards:
@@ -438,12 +441,17 @@ prd:                                  # ia-fe-to-prd 的局部字段
 # workflow-engine
 
 ## 引擎元信息
-engine_version: "{x.y.z}"           # ⚠️ v1.2.0 必填
+engine_version: "2.1.0"           # ⚠️ v1.2.0 必填
 spec_compliance: "v1.2.0"
 
 ## 职责声明
 本文件是纯抽象场景路由引擎，完全业务无感知。
 所有路由判断完全基于 registry 数据驱动，禁止硬编码业务分支。
+
+> **术语澄清（v2.1.0 引入）**：
+> 本文件中的"SceneRouter"是 **workflow 大场景路由器**，负责在多个 workflow（新建/增量/评审/续接）之间做选择。
+> 它与 Layer 3.5 的"变化点路由器（ChangeRouter）"不是同一概念——后者是在 workflow 命中后、对增量需求做"原子变化点 → 受影响要素"二级路由。
+> 本文件不涉及 Layer 3.5。
 
 ## Phase 1：构建 Input Inventory
 1. 读取 config.yaml 中的 context.ongoing_file，加载当前项目状态
@@ -592,7 +600,7 @@ input_signature 是工作流的硬前置条件，绕过会导致 orchestration �
 # element-runner
 
 ## 引擎元信息
-engine_version: "{x.y.z}"
+engine_version: "2.1.0"
 spec_compliance: "v1.2.0"
 
 ## 职责声明
@@ -806,7 +814,7 @@ spec_compliance: "v1.2.0"
 # standards-loader
 
 ## 引擎元信息
-engine_version: "{x.y.z}"
+engine_version: "2.1.0"
 spec_compliance: "v1.2.0"
 
 ## 职责声明
@@ -1055,7 +1063,7 @@ standards:
 
 ##### 3.3.6.1 dependency-graph.yaml（级联影响关系）
 
-**用途**：定义要素之间的级联影响关系，用于 modify 模式做影响范围分析；用于 incremental 模式作为场景路由的安全网（详见 3.5.3）。
+**用途**：定义要素之间的级联影响关系，用于 modify 模式做影响范围分析；用于 incremental 模式作为变化点路由的安全网（详见 3.5.3）。
 
 **消费层**：orchestration 中处理 modify / incremental 模式的编排文件
 
@@ -1072,34 +1080,34 @@ impact_edges:
         reason: "{影响原因}"
 ```
 
-##### 3.3.6.2 change-scene-registry.yaml（原子变更场景目录，详见 3.5.1）
+##### 3.3.6.2 atomic-change-registry.yaml（原子变化点目录，详见 3.5.1）
 
-##### 3.3.6.3 scene-element-mapping.yaml（场景到要素映射，详见 3.5.2）
+##### 3.3.6.3 change-element-mapping.yaml（变化点到要素映射，详见 3.5.2）
 
 ---
 
-### Layer 3.5 — 场景路由层（v1.2.0 新增，可选）
+### Layer 3.5 — 变化点路由层（v1.2.0 新增，可选）
 
-> **适用范围**：仅 modify、incremental 等需要"在 workflow 命中后做二级路由"的场景启用。新建（build）模式不需要场景路由。
+> **适用范围**：仅 modify、incremental 等需要"在 workflow 命中后做二级路由"的场景启用。新建（build）模式不需要变化点路由。
 >
-> **核心理念**：用户用产品语言描述变更（如"在订单页加一个导出按钮"），系统识别为原子场景（如 UI-01），通过映射表确定受影响要素。这是规范"原则 3：场景优先于工程抽象"的具体落地。
+> **核心理念**：用户用产品语言描述变更（如"在订单页加一个导出按钮"），系统识别为原子变化点（如 UI-01），通过映射表确定受影响要素。这是规范"原则 3：产品语言优先于工程抽象"的具体落地。
 
 ---
 
-#### 3.5.1 registry/change-scene-registry.yaml
+#### 3.5.1 registry/atomic-change-registry.yaml
 
-**用途**：原子变更场景目录。定义在产品/业务层面用户可能描述的所有变更场景，按业务域分类。
+**用途**：原子变化点目录。定义在产品/业务层面用户可能描述的所有原子变化点，按业务域分类。
 
-**消费层**：orchestration/o-{modify-or-incremental}.md 在场景识别阶段读取
+**消费层**：orchestration/o-{modify-or-incremental}.md 在变化点识别阶段读取
 
 **Schema**：
 
 ```yaml
-change_scenes:
+atomic_changes:
   - id: "{CATEGORY-NN}"               # 必填，如 "UI-01"、"DA-04"
-    name: "{场景名称}"                 # 必填，简短描述
+    name: "{变化点名称}"               # 必填，简短描述
     category: "{UI|DA|LG|PR|IN|NF}"   # 必填，业务域分类（建议但不限于以下 6 类）
-    description_zh: "用户描述：..."   # 必填，用户视角的场景描述
+    description_zh: "用户描述：..."   # 必填，用户视角的变化描述
     detection_keywords: ["关键词1"]   # 可选，关键词初筛用
     examples:                         # 可选，典型例子
       - "在订单列表页加一个'批量导出'按钮"
@@ -1116,9 +1124,9 @@ change_scenes:
 
 ---
 
-#### 3.5.2 registry/scene-element-mapping.yaml
+#### 3.5.2 registry/change-element-mapping.yaml
 
-**用途**：定义每个原子场景影响哪些要素，以及影响的置信度。
+**用途**：定义每个原子变化点影响哪些要素，以及影响的置信度。
 
 **消费层**：同 3.5.1
 
@@ -1133,8 +1141,8 @@ change_scenes:
 **Schema**：
 
 ```yaml
-scene_element_mappings:
-  - scene_id: "{CATEGORY-NN}"          # 引用 change-scene-registry 中的 id
+change_element_mappings:
+  - change_id: "{CATEGORY-NN}"        # 引用 atomic-change-registry 中的 id
     affects:
       - element_id: "{element_id}"
         impact_level: "certain" | "likely" | "conditional"
@@ -1144,20 +1152,20 @@ scene_element_mappings:
 
 ---
 
-#### 3.5.3 场景路由四步流程
+#### 3.5.3 变化点路由四步流程
 
-任何使用场景路由层的 orchestration 都应实现以下四步流程：
+任何使用变化点路由层的 orchestration 都应实现以下四步流程：
 
-**Step 1：场景识别**
+**Step 1：变化点识别**
 
-读取用户描述变更的输入，按以下子步骤识别原子场景：
-1. **关键词初筛**：用 change-scene-registry 中的 detection_keywords 做模糊匹配，得到候选场景列表
+读取用户描述变更的输入，按以下子步骤识别原子变化点：
+1. **关键词初筛**：用 atomic-change-registry 中的 detection_keywords 做模糊匹配，得到候选变化点列表
 2. **LLM 语义匹配**：基于 description_zh 和 examples 做语义判断，从候选中精选
-3. **用户确认**：若有歧义或多个场景命中，列出选项让用户选择
+3. **用户确认**：若有歧义或多个变化点命中，列出选项让用户选择
 
 **Step 2：要素影响汇聚**
 
-对所有命中的场景，从 scene-element-mapping 汇聚受影响要素：
+对所有命中的变化点，从 change-element-mapping 汇聚受影响要素：
 - impact_level=certain：直接加入 effective_sequence
 - impact_level=likely：加入但标记为可跳过
 - impact_level=conditional：根据 condition 判断或询问用户
@@ -1196,7 +1204,7 @@ scene_element_mappings:
 - `registry/workflow-registry.yaml`（获取 element_sequence）
 - `registry/element-type-registry.yaml`（动态读取 chapter_info）
 - 输出文档（创建/读取 frontmatter）
-- （v1.2.0 新增）`registry/change-scene-registry.yaml` 和 `scene-element-mapping.yaml`（modify/incremental 模式）
+- （v1.2.0 新增）`registry/atomic-change-registry.yaml` 和 `change-element-mapping.yaml`（modify/incremental 模式）
 - （v1.2.0 新增）`registry/dependency-graph.yaml`（modify/incremental 模式作为安全网）
 
 **内容结构（强制约束）**：
@@ -1225,10 +1233,10 @@ scene_element_mappings:
 3. 确认有效要素序列（**v1.2.0：从 element-type-registry 动态读取，含 chapter_info**）
 4. 其他初始化操作
 
-## Phase 1.5：场景路由（仅 modify/incremental 模式）⚠️ v1.2.0 新增
+## Phase 1.5：变化点路由（仅 modify/incremental 模式）⚠️ v1.2.0 新增
 
 按 3.5.3 节的四步流程：
-1. 场景识别
+1. 变化点识别
 2. 要素影响汇聚
 3. always_affected 要素补全
 4. dependency-graph 安全网校验
@@ -1536,16 +1544,16 @@ modify_focus:
 **Context 字段使用**：
 - `output_doc_path`：必填，新版本文档路径
 - `base_doc_path`：必填，历史基线文档路径
-- `impact_analysis`：必填，场景路由结果
+- `impact_analysis`：必填，变化点路由结果
 
 **impact_analysis Schema**：
 
 ```yaml
 impact_analysis:
-  triggered_scenes:                     # 命中的场景列表
-    - scene_id: "UI-01"
+  triggered_changes:                    # 命中的原子变化点列表
+    - change_id: "UI-01"
       user_description: "在订单页加批量导出按钮"
-  effective_sequence:                   # 经场景路由后的有效要素序列
+  effective_sequence:                   # 经变化点路由后的有效要素序列
     - element_id: "ui-prototype"
       impact_level: "certain"
     - element_id: "feature-spec"
@@ -1553,23 +1561,61 @@ impact_analysis:
   cascade_warnings:                     # dependency-graph 安全网发现的额外影响
     - element_id: "story-design"
       reason: "always_affected_in incremental"
+  impact_points: []                     # 详见下方 ImpactPoint 章节，由 incremental orchestration 在执行过程中累积
 ```
 
-**DELTA 格式（v1.2.0 形式化）**：
+**ImpactPoint 数据结构（v1.2.0 修订）**：
+
+ImpactPoint 是"变化点对要素的具体影响落点"统一抽象，按 `kind` 字段区分两种性质：
+
+```yaml
+impact_point:
+  id: "IP-{全局序号}"             # 全局编号，跨要素连续
+  source_change: "{change_id}"     # 来源原子变化点 ID（来自 atomic-change-registry）
+  trigger_type: "primary" | "cascade"   # 主触发 / 依赖传导
+  cascade_rule: "{规则编号}"       # 仅 trigger_type=cascade 时填写（如 T-01）
+  element: "{element_id}"          # 受影响的要素 ID
+  kind: "modify" | "forbid"        # 影响性质（关键字段）
+  baseline_ref: "{基线章节引用}"   # 基线引用（共用）
+  baseline_state: "{基线现状}"     # 基线现状描述（共用）
+
+  # ─── 当 kind == "modify" 时使用 ───
+  action: "新增" | "修改" | "删除" | "复用" | "不涉及"
+  target_state: "{目标状态}"
+  in_scope: ["明确包含的对象"]
+  out_of_scope: ["明确排除的对象"]
+
+  # ─── 当 kind == "forbid" 时使用 ───
+  reason: "{禁止改动的理由}"
+  consequence: "{若违反禁止会带来的后果}"
+  adjacent_to: ["IP-xxx"]          # 相邻 modify 影响点编号
+```
+
+**与旧术语的对应关系**：
+
+| 旧概念 | 新概念 |
+|---|---|
+| ChangePoint（CP-xxx） | ImpactPoint(kind="modify")（IP-xxx） |
+| ForbiddenItem（FB-xxx） | ImpactPoint(kind="forbid")（IP-xxx-forbid） |
+| 改动点清单 + 禁止改动项清单 | 影响点清单（按 kind 字段分组展示） |
+
+**DELTA 格式（v1.2.0 修订，引擎接口契约）**：
 
 增量内容必须用 DELTA 标注块包裹：
 
 ```html
-<!-- DELTA: scene={scene_id}, chapter={element_id}, op={add|modify|delete}, level={certain|likely|conditional} -->
+<!-- DELTA: change={change_id}, chapter={element_id}, op={add|modify|delete}, level={certain|likely|conditional} -->
 ...增量内容（保留 Markdown 格式）...
 <!-- /DELTA -->
 ```
 
 **字段说明**：
-- `scene`：触发增量的场景 ID（来自 change-scene-registry）
+- `change`：触发增量的原子变化点 ID（来自 atomic-change-registry）
 - `chapter`：受影响要素 ID
 - `op`：操作类型（add/modify/delete）
 - `level`：影响置信度（certain/likely/conditional）
+
+> **历史兼容性提示（v2.1.0 引擎）**：旧版本 DELTA 注释使用 `scene=` 字段。当前引擎只识别 `change=`。如有存量 incremental 文档需要做一次性迁移，使用正则替换：`scene=([A-Z]{2}-\d{2})` → `change=$1`。
 
 ---
 
@@ -1647,7 +1693,7 @@ impact_analysis:
 | 状态写入错误 | Layer 2 | element-runner.md 的 Phase 6 |
 | 路径引用错误 | Layer 1 | config.yaml |
 | 引擎在两个 Skill 表现不一致 | Layer 2 | docs/engine-canonical/，并同步到所有 Skill |
-| 增量场景识别不准 | Layer 3.5 | change-scene-registry / scene-element-mapping |
+| 增量变化点识别不准 | Layer 3.5 | atomic-change-registry / change-element-mapping |
 | 跨 Skill artifact 不兼容 | 第六章 | output-contract.yaml / config.yaml.upstream_dependencies |
 
 ---
@@ -1717,22 +1763,22 @@ SKILL.md 启动序列建议加入引擎版本校验步骤：
 
 ---
 
-### 4.8 场景路由层扩展（v1.2.0 新增）
+### 4.8 变化点路由层扩展（v1.2.0 新增）
 
-当某 modify/incremental 工作流需要场景路由能力时：
+当某 modify/incremental 工作流需要变化点路由能力时：
 
 1. 在 `config.yaml.extension_registry` 中声明：
    ```yaml
    extension_registry:
-     change_scenes: "registry/change-scene-registry.yaml"
-     scene_element_mapping: "registry/scene-element-mapping.yaml"
+     atomic_changes: "registry/atomic-change-registry.yaml"
+     change_element_mapping: "registry/change-element-mapping.yaml"
      dependency_graph: "registry/dependency-graph.yaml"
    ```
 2. 创建三个注册表文件（schema 见 3.5.1、3.5.2、3.3.6.1）
 3. 在 element-type-registry 中为相关要素添加 `always_affected_in` 字段
-4. 在 orchestration 中按 3.5.3 节的四步流程实现场景路由
+4. 在 orchestration 中按 3.5.3 节的四步流程实现变化点路由
 
-**禁止**：跳过场景路由层直接基于关键词写硬编码路由逻辑。
+**禁止**：跳过变化点路由层直接基于关键词写硬编码路由逻辑。
 
 ---
 
@@ -1934,8 +1980,8 @@ optional_skill_dependencies:
 | registry/input-type-registry.yaml        | Layer 3（标准）      | YAML                 | 输入类型探测规则       | 新增输入类型                  |
 | registry/standards-registry.yaml         | Layer 3（标准）      | YAML                 | 规范字典           | 新增规范文件                  |
 | **registry/dependency-graph.yaml**       | Layer 3（扩展）      | YAML                 | 级联影响关系         | modify/incremental 场景   |
-| **registry/change-scene-registry.yaml**  | Layer 3.5（扩展）    | YAML                 | 原子变更场景目录       | incremental 场景          |
-| **registry/scene-element-mapping.yaml**  | Layer 3.5（扩展）    | YAML                 | 场景到要素映射        | incremental 场景          |
+| **registry/atomic-change-registry.yaml**   | Layer 3.5（扩展）    | YAML                 | 原子变化点目录         | incremental 场景          |
+| **registry/change-element-mapping.yaml**   | Layer 3.5（扩展）    | YAML                 | 变化点到要素映射       | incremental 场景          |
 | orchestration/o-{workflow-id}.md         | Layer 4          | Markdown             | 场景宏观编排         | 新增场景、调整执行顺序             |
 | spec/_template.md                        | Layer 5          | Markdown             | Spec 创建模板      | Spec 结构规范调整             |
 | spec/m-{doc}-{element}.md                | Layer 5          | Markdown             | 要素规格书          | 要素实现细节调整                |
@@ -1974,9 +2020,9 @@ optional_skill_dependencies:
 - [ ] **v1.2.0**：所有扩展注册表都在 config.yaml.extension_registry 中声明
 
 **Layer 3.5 合规（v1.2.0，仅 modify/incremental 场景）**
-- [ ] change-scene-registry 中所有场景都有完整字段
-- [ ] scene-element-mapping 中引用的 scene_id 都在 change-scene-registry 中存在
-- [ ] scene-element-mapping 中引用的 element_id 都在 element-type-registry 中存在
+- [ ] atomic-change-registry 中所有变化点都有完整字段
+- [ ] change-element-mapping 中引用的 change_id 都在 atomic-change-registry 中存在
+- [ ] change-element-mapping 中引用的 element_id 都在 element-type-registry 中存在
 - [ ] always_affected_in 字段已为永远受影响的要素配置
 
 **Layer 4 合规**
@@ -2020,9 +2066,9 @@ optional_skill_dependencies:
 - _template.md 加 for_scenario、dual_input_mode 等字段
 - 创建 output-contract.yaml（如有下游消费方）
 
-**Level 3（可选，按需）**：使用场景路由层
-- 仅当有 modify/incremental 工作流且需要场景路由时
-- 创建 change-scene-registry.yaml、scene-element-mapping.yaml
+**Level 3（可选，按需）**：使用变化点路由层
+- 仅当有 modify/incremental 工作流且需要变化点路由时
+- 创建 atomic-change-registry.yaml、change-element-mapping.yaml
 - 在 orchestration 中实现 3.5.3 节的四步流程
 
 ### C.2 兼容性保证
