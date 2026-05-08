@@ -190,6 +190,32 @@ requirement_type: "TP"  # 优先级最高
 - 写入 ongoing.md requirement_type 字段
 - 生成后台标注记录(存入 FE 文档后台备注区)
 
+### incremental 模式
+
+本要素 backend_only=true,在 incremental 模式下:
+
+**Step I-1: 重判需求类型** `[自动]`
+
+合并基线 FE 已有内容 + 本次 user_change_description + 已生成的增量章节,
+按 build 模式 Step 2~6 的关键词匹配逻辑重新判定 requirement_type。
+
+**Step I-2: 检测类型变化** `[自动]`
+
+- 若新判定 == 基线 requirement_type → 无需变更,SKIP
+- 若新判定 ≠ 基线 requirement_type → 暂停并报警:
+  ```
+  ⚠️ 本次增量导致需求类型从 {基线} 变为 {新判定}
+  这可能意味着增量需求超出 TP 类型边界。建议:
+    [A] 拒绝增量,回退新文档(基线类型应保持稳定)
+    [B] 接受新类型,但下游 PRD 可能需要重新走 PRD 新建流程
+    [Q] 退出
+  ```
+
+**Step I-3: 写入 frontmatter** `[自动]`
+
+仅在 SKIP 时不写;其他情况下更新 `requirement_type` 字段。
+不写文档正文(backend_only 行为已由 Phase 6 处理)。
+
 ---
 
 ## 引导开场(对话模式)

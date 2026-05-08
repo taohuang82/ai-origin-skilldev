@@ -16,7 +16,7 @@ workflows:
     trigger_keywords: ["评审修改", "根据评审意见", "修改FE", "按意见改"]
     orchestration_file: "orchestration/o-review-modify.md"
     element_sequence: []
-    status: "active"
+    status: "planned"  # 骨架版本,待实现
 
   # 场景2: 优化需求增量构建
   - id: "tp-incremental-build"
@@ -37,11 +37,9 @@ workflows:
         - id: "RAW_REQUIREMENTS_DOC"
           reason: "可选:用户可提供优化需求的详细文档。"
     trigger_keywords: ["优化需求", "1-n", "在现有FE基础上"]
-    requirement_type: "TP"
-    requirement_nature: "优化需求"
     orchestration_file: "orchestration/o-tp-incremental.md"
     element_sequence: []
-    status: "active"
+    status: "planned"  # 骨架版本,待实现
 
   # 场景3: 专题需求新建构建(本次重点实现)
   - id: "tp-new-build"
@@ -62,8 +60,6 @@ workflows:
         - id: "RAW_REQUIREMENTS_DOC"
           reason: "可选:用户可提供原始需求文档(Word/PDF/HTML),系统会智能抽取要素信息。"
     trigger_keywords: ["创建FE", "生成FE", "特性需求文档", "创建特性需求", "新建FE"]
-    requirement_type: "TP"
-    requirement_nature: "专题需求"
     orchestration_file: "orchestration/o-tp-new-build.md"
     element_sequence:
       - element_id: "original-requirement"
@@ -83,7 +79,6 @@ workflows:
       - element_id: "glossary"
         optional: false
     status: "active"
-    resume_handling: "file_based"  # 续接恢复通过读取 FE frontmatter.stepsCompleted 处理
 
   # 场景4-5: AP/AI专题需求(待实现)
   - id: "ap-new-build"

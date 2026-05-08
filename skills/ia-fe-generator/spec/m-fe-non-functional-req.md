@@ -272,6 +272,75 @@ AP类示例:
 
 **Step 8: 写入文档** `[自动]`
 
+### incremental 模式
+
+> 适用于增量构建场景。基线为 context.base_doc_path 指向的历史 FE。
+> 本节仅生成"变更增量"(用 DELTA 标注块包裹),不重写已有内容。
+
+**Step I-1: 读取基线对应章节** `[自动]`
+
+读取 `context.base_doc_path` 中本要素对应章节(依据 `chapter_info.l1_no`)的现有内容,作为基线。
+若基线对应章节不存在(异常情况) → 暂停并报错,提示用户基线 FE 不完整。
+
+**Step I-2: 提取本要素相关的变化点** `[自动]`
+
+从 `context.impact_analysis.element_changes` 提取本要素相关的变化点列表,每项含:
+- `change_id`(如 PR-01)
+- `user_description`(用户原话)
+- `impact_level`(certain/likely/conditional/always_affected)
+
+若 `element_changes` 为空 → 跳过本要素(在 Phase 6 仅记录 SKIP)。
+
+聚焦:针对 NF-* 变化点。NF-01 追问性能指标新值,后台用相同推导逻辑得新指标;NF-02 追问安全合规调整
+
+**Step I-3: 对话挖掘变化细节** `[交互]`
+
+对每个变化点,沿用本 Spec `## 追问维度` 的提问内核,但**只针对变化部分追问**,禁止重新挖掘基线已有内容。
+
+具体追问聚焦点见下方"逐 Spec 微调点"。
+
+每完成一个变化点的细节挖掘,做小结并请用户确认,确认后才继续下一个变化点。
+
+**Step I-4: 生成 DELTA 标注的增量内容** `[自动]`
+
+按 element-runner Phase 4 incremental 分支的 DELTA 格式输出:
+
+```
+<!-- DELTA: change={change_id}, chapter={element_id}, op={add|modify|delete}, level={certain|likely|conditional} -->
+{增量内容,保留 Markdown 格式,含表格/Mermaid/列表}
+<!-- /DELTA -->
+```
+
+注意:
+- 仅输出增量部分,不复述基线已有内容
+- 多个变化点对应多个 DELTA 块
+- `op=modify` 必须明确"修改自基线哪一节"(在 DELTA 块内首行写"基线引用: {chapter}")
+- `op=delete` 必须明确"删除基线哪一节"(在 DELTA 块内写"删除目标: {chapter}, 原因: {...}")
+
+**Step I-5: 累积 ImpactPoint** `[自动]`
+
+将本要素本次产生的影响点写入 `context.impact_analysis.impact_points`,数据结构遵循规范 §3.7.3:
+
+```yaml
+- id: "IP-{全局递增}"
+  source_change: "{change_id}"
+  trigger_type: "primary"
+  element: "{当前 element_id}"
+  kind: "modify"
+  baseline_ref: "{基线章节引用}"
+  baseline_state: "{基线现状描述}"
+  action: "新增 | 修改 | 删除"
+  target_state: "{目标状态}"
+  in_scope: ["{明确包含的对象}"]
+  out_of_scope: ["{明确排除的对象}"]
+```
+
+**Step I-6: 用户最终确认** `[交互]`
+
+展示本要素本次的全部 DELTA 块和 ImpactPoint 清单,询问"本要素的增量是否准确?"。
+
+强制获得明确确认("准确"/"没问题"/"对的")后才能进入 Phase 5 质量验证。
+
 ---
 
 ## 引导开场(对话模式)

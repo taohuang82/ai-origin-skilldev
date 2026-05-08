@@ -34,7 +34,7 @@ workflows:
     trigger_keywords: ["评审修改", "根据评审意见", "修改PRD", "按意见改", "有评审标注"]
     orchestration_file: "orchestration/o-review-modify.md"
     element_sequence: []
-    status: "active"
+    status: "planned"  # 骨架版本,待实现
 
   - id: "tp-incremental-build"
     name: "TP 增量 PRD 设计"
@@ -52,11 +52,9 @@ workflows:
           reason: "存在评审意见时属于 review-modify 场景。"
       optional: []
     trigger_keywords: ["增量设计", "优化需求", "1-n", "在现有PRD基础上"]
-    requirement_type: "TP"
-    requirement_nature: "优化需求"
     orchestration_file: "orchestration/o-incremental-build.md"
     element_sequence: []
-    status: "planned"       # 改为planned，因为orchestration文件尚未实现
+    status: "planned"  # 规划中,orchestration文件尚未实现
 
   - id: "tp-new-build"
     name: "TP 专题需求 PRD 设计"

@@ -12,6 +12,7 @@ element_types:
     belongs_to: ["TP", "AP", "AI"]
     optional: false
     backend_only: false
+    always_affected_in: ["incremental"]
     description: "需求发起人提供的原始需求说明,支持文档导入(Word/PDF/HTML)或对话输入,标准化格式整理。"
     dual_input_mode: true
 
@@ -38,6 +39,7 @@ element_types:
     belongs_to: ["TP", "AP", "AI", "IT"]
     optional: false
     backend_only: true                    # ⚠️ 关键：仅写 frontmatter，不写正文
+    always_affected_in: ["incremental"]
     description: "TP/AP/AI/IT类型定性,确定后续功能模块路径。"
 
   # TP类型专用要素
@@ -112,4 +114,5 @@ element_types:
     belongs_to: ["TP", "AP", "AI", "IT"]
     optional: false
     backend_only: false
+    always_affected_in: ["incremental"]
     description: "业务术语、技术术语的定义与使用场景。"

@@ -53,8 +53,11 @@
 
 ### Action 1：验证环境与准备上下文
 
-1. 读取 `workspace/ongoing.md`，提取必填字段
-2. 若 `ongoing.md` 不存在，输出引导模板让用户填写
+1. 读取 `workspace/ongoing.md`，提取必填字段：
+   - `current_version`
+   - `project_name`
+   - 其他可选字段
+2. 若 `ongoing.md` 不存在或缺少 `project_name`，输出引导模板让用户填写
 3. 若 `{biz_knowledge_library}/` 存在，作为可选知识库上下文加载
 4. 生成建议文件名，创建 FE 文档，写入初始 frontmatter，**将文档路径存入 `context.output_doc_path`**：
 
