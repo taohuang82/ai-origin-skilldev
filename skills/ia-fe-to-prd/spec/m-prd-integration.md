@@ -102,7 +102,7 @@ extend_ref: "extend:integration-design"
 ## 输出骨架
 
 ```markdown
-## 7. 集成设计
+## 七、集成设计
 
 ### 7.1 集成点
 

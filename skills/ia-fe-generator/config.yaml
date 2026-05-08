@@ -24,6 +24,10 @@ registry:
   standards: "registry/standards-registry.yaml"
 
 # v1.2.0 扩展注册表（按需声明；当前 ia-fe-generator 暂无扩展注册表，保留区块占位以便未来添加）
+# 未来若启用变化点路由层，按以下格式声明：
+#   atomic_changes: "registry/atomic-change-registry.yaml"
+#   change_element_mapping: "registry/change-element-mapping.yaml"
+#   dependency_graph: "registry/dependency-graph.yaml"
 extension_registry: {}
 
 standards:

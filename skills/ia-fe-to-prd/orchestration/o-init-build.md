@@ -125,14 +125,16 @@ FOR each element_id IN effective_sequence:
     impact_analysis   : {},
     change_type       : "",
     chapter_info      : {
-                         l1_no: element对应的chapter_no（从element-type-registry读取）,
-                         element_name: element的name字段,
-                         output_doc_path: context.output_doc_path
+                         l1_no           : element对应的chapter_no_cn（从element-type-registry读取）,
+                         element_name    : element的name字段,
+                         sub_elements    : element的sub_elements字段（从element-type-registry读取）,
+                         chapter_label_style: element的chapter_label_style字段（从element-type-registry读取）,
+                         backend_only    : element的backend_only字段（从element-type-registry读取，若不存在则为false）
                        }
   })
   
   **强制等待 element-runner 返回控制信号**：
-  - element-runner 必须在 Phase 6 步骤3 使用 AskUserQuestion 工具等待用户选择
+  - element-runner 必须在 Phase 6 完成后等待用户响应（具体的呈现方式由 Spec 的「## 执行步骤」自行决定）
   - orchestration 挂起，等待用户选择并返回控制信号
   - 未收到控制信号前，禁止执行下一个要素
   
@@ -224,4 +226,4 @@ END FOR
 
 建议下一步：
   ia-prd-to-design {current_version}
-  
+```

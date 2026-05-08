@@ -3,7 +3,7 @@
 ## 引擎元信息
 
 ```yaml
-engine_version: "2.0.0"
+engine_version: "2.1.0"
 spec_compliance: "v1.2.0"
 ```
 
@@ -11,6 +11,11 @@ spec_compliance: "v1.2.0"
 
 本文件是纯抽象场景路由引擎，完全业务无感知。
 所有路由判断完全基于 registry 数据驱动，禁止硬编码业务分支。
+
+> **术语澄清（v2.1.0 引入）**：
+> 本文件中的"SceneRouter"是 **workflow 大场景路由器**，负责在多个 workflow（新建/增量/评审/续接）之间做选择。
+> 它与 Layer 3.5 的"变化点路由器（ChangeRouter）"不是同一概念——后者是在 workflow 命中后、对增量需求做"原子变化点 → 受影响要素"二级路由。
+> 本文件不涉及 Layer 3.5。
 
 ## Phase 1：构建 Input Inventory
 

@@ -1,6 +1,21 @@
 ---
 name: ia-fe-generator
-description: 支持从用户对话输入和原始需求文档生成FE文档,支持多模式工作流程(新建、增量构建、评审修改、续接恢复),支持0-1专题需求(新建系统)和1-n优化需求(现有系统改进),包括TP/AP/AI类需求。适用于IT产品设计场景中通过协作式发现或文档导入生成FE文档。触发词:创建FE、生成FE、创建业务方案、生成业务方案、ia-fe-generator、需求文档、业务方案文档
+description: >
+  支持从用户对话输入和原始需求文档生成 FE 文档（业务需求/业务方案/特性需求文档）。
+  支持多模式工作流（新建、增量构建、评审修改、续接恢复），覆盖 0-1 专题需求（新建系统）
+  和 1-n 优化需求（现有系统改进），包括 TP/AP/AI 类需求。
+  适用于 IT 产品设计场景中通过协作式发现或文档导入生成结构化业务需求文档。
+  
+  即使用户没有明确说"生成 FE"或"创建 FE 文档"，只要他们想：
+  - 把模糊的业务想法整理成结构化的需求文档
+  - 通过对话挖掘业务痛点、目标、流程、规则
+  - 把 Word/PDF/HTML 形式的需求素材标准化
+  - 在已有需求文档基础上做评审修改或增量调整
+  也应优先使用本 Skill。
+  
+  触发词：创建FE、生成FE、创建业务方案、生成业务方案、ia-fe-generator、
+  需求文档、业务方案文档、需求梳理、整理业务需求、把需求写成文档、
+  需求结构化、做特性需求、写特性方案、把这个需求整理一下
 disable-model-invocation: false
 version: 2.0.0
 spec_compliance: "v1.2.0"
@@ -24,11 +39,21 @@ spec_compliance: "v1.2.0"
 ## 启动序列
 
 1. 读取 `config.yaml`,建立路径、文档类型、registry 与 standards 的挂载点。
-2. 校验 `engine/ENGINE-VERSION` 与 `docs/engine-canonical/ENGINE-VERSION` 内容一致；不一致则输出警告（不阻断）：
-   ```
-   ⚠️ 引擎版本与权威源不一致，建议执行：
-     cp docs/engine-canonical/* skills/ia-fe-generator/engine/
-   ```
+2. 引擎版本自检（容错执行）：
+   - 读取 `engine/ENGINE-VERSION`，记录当前引擎版本号
+   - 尝试读取 `docs/engine-canonical/ENGINE-VERSION`：
+     - 若文件存在且内容一致 → 继续，不输出
+     - 若文件存在但内容不一致 → 输出警告（不阻断）：
+       ```
+       ⚠️ 引擎版本与权威源不一致：
+         当前: {engine/ENGINE-VERSION}
+         权威源: {docs/engine-canonical/ENGINE-VERSION}
+       建议执行同步：
+         cp docs/engine-canonical/* skills/ia-fe-generator/engine/
+       ```
+     - 若 `docs/engine-canonical/` 不可访问（如 Skill 已安装到运行环境，
+       无开发仓库上下文）→ 静默跳过，不输出任何信息
+   - 无论结果如何，本步骤不阻断启动序列
 3. 检测 `workspace/raw_requirements/` 目录是否存在原始需求文档(Word/PDF/HTML等)。
 4. 读取 `engine/workflow-engine.md`,把用户原始输入和文档检测结果作为 `user_message` 传入。
 5. 由 `workflow-engine` 构建 Input Inventory (文档输入 + 对话输入)、执行 SceneRouter、确认当前 workflow。

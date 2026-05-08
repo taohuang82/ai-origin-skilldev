@@ -162,7 +162,7 @@ extend_ref: "extend:info-architecture"
 ## 输出骨架
 
 ```markdown
-## 4. 信息架构
+## 四、信息架构
 
 ### 4.1 业务对象/逻辑实体
 

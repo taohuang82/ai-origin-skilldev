@@ -145,7 +145,7 @@ extend_ref: "extend:product-positioning"
 ## 输出骨架
 
 ```markdown
-## 1. 定位与目标
+## 一、定位与目标
 
 ### 1.1 用户和干系人
 

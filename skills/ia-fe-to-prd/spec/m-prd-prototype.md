@@ -146,7 +146,7 @@ extend_ref: "extend:ui-prototype"
 ## 输出骨架
 
 ```markdown
-## 3. 界面原型
+## 三、界面原型
 
 ### 3.1 页面清单
 

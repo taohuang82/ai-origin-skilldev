@@ -3,7 +3,7 @@
 ## 引擎元信息
 
 ```yaml
-engine_version: "2.0.0"
+engine_version: "2.1.0"
 spec_compliance: "v1.2.0"
 ```
 
@@ -135,10 +135,16 @@ spec_compliance: "v1.2.0"
 把 `context.base_doc_path` 作为基线。增量内容必须用 DELTA 标注块包裹：
 
 ```html
-<!-- DELTA: scene={scene_id}, chapter={element_id}, op={add|modify|delete}, level={certain|likely|conditional} -->
+<!-- DELTA: change={change_id}, chapter={element_id}, op={add|modify|delete}, level={certain|likely|conditional} -->
 ...增量内容（保留 Markdown 格式）...
 <!-- /DELTA -->
 ```
+
+> **字段说明**：
+> - `change`：触发本段增量的原子变化点 ID（来自 atomic-change-registry，如 UI-01）
+> - `chapter`：受影响要素 ID
+> - `op`：操作类型（add/modify/delete）
+> - `level`：影响置信度（certain/likely/conditional）
 
 ---
 

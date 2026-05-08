@@ -26,8 +26,8 @@ registry:
 # v1.2.0 扩展注册表（按需声明）
 extension_registry:
   dependency_graph: "registry/dependency-graph.yaml"
-  change_scenes: "registry/change-scene-registry.yaml"
-  scene_element_mapping: "registry/scene-element-mapping.yaml"
+  atomic_changes: "registry/atomic-change-registry.yaml"
+  change_element_mapping: "registry/change-element-mapping.yaml"
 
 # ── 上游Skill依赖（v1.2.0 第六章）──
 upstream_dependencies:

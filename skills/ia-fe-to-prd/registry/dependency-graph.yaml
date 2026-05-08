@@ -2,11 +2,11 @@
 # 用途：定义要素之间的级联影响关系
 # 在 v1.2.0 中作为：
 #   1. modify 模式的影响范围分析依据
-#   2. incremental 模式场景路由的"安全网"（详见 3.5.3 节 Step 4）
+#   2. incremental 模式变化点路由的"安全网"（详见规范 3.5.3 节 Step 4）
 #
 # ⚠️ v1.2.0 变更说明：
 # - 旧版的 incremental_impact_rules（A-F 工程抽象）已删除
-# - 增量场景的核心路由逻辑迁移到 change-scene-registry + scene-element-mapping
+# - 增量变化点的核心路由逻辑迁移到 atomic-change-registry + change-element-mapping
 # - 本文件仅保留 impact_edges，作为级联影响校验
 
 impact_edges:

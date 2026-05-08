@@ -102,7 +102,7 @@ extend_ref: "extend:permission-control"
 ## 输出骨架
 
 ```markdown
-## 6. 权限设计
+## 六、权限设计
 
 ### 6.1 角色定义
 

@@ -89,7 +89,7 @@ extend_ref: "extend:config-design"
 ## 输出骨架
 
 ```markdown
-## 8. 配置设计
+## 八、配置设计
 
 ### 8.1 用户配置项
 
