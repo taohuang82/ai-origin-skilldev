@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TP 多 Tab — 页签1 表单+表格 / 页签2 图表分析</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="tp-page">
+      <div class="tp-content">
+        <div
+          class="tp-mainTabs"
+          data-tp-tabs
+        >
+          <div class="tp-mainTabBar" role="tablist" aria-label="协同查询视图">
+            <button
+              type="button"
+              class="tp-mainTab"
+              role="tab"
+              id="tp-tab-0"
+              aria-selected="true"
+              aria-controls="tp-panel-0"
+            >
+              SPART编码协同查询
+            </button>
+            <button
+              type="button"
+              class="tp-mainTab"
+              role="tab"
+              id="tp-tab-1"
+              aria-selected="false"
+              aria-controls="tp-panel-1"
+            >
+              预测对象协同属性查询
+            </button>
+            <button
+              type="button"
+              class="tp-mainTab"
+              role="tab"
+              id="tp-tab-2"
+              aria-selected="false"
+              aria-controls="tp-panel-2"
+            >
+              S&amp;OP对象协同查询
+            </button>
+            <button
+              type="button"
+              class="tp-mainTab"
+              role="tab"
+              id="tp-tab-3"
+              aria-selected="false"
+              aria-controls="tp-panel-3"
+            >
+              主计划对象协同查询
+            </button>
+            <button
+              type="button"
+              class="tp-mainTab"
+              role="tab"
+              id="tp-tab-4"
+              aria-selected="false"
+              aria-controls="tp-panel-4"
+            >
+              对象协同查询（KPI视角）
+            </button>
+          </div>
+
+          <!-- Tab1：表单 + 表格 -->
+          <div
+            class="tp-tabPanel"
+            role="tabpanel"
+            id="tp-panel-0"
+            aria-labelledby="tp-tab-0"
+          >
+            <section class="tp-card tp-queryCard" aria-label="查询条件">
+              <details class="tp-queryPanel" open>
+                <summary class="tp-queryPanel__tab">
+                  <span class="tp-queryPanel__tabStart">
+                    <span class="tp-queryPanel__tabLabel">查询条件</span>
+                    <span class="tp-queryPanel__chevron" aria-hidden="true"></span>
+                  </span>
+                  <span class="tp-queryPanel__tabActions">
+                    <button type="button" class="tp-iconGhost" aria-label="固定" title="固定">📌</button>
+                    <button type="button" class="tp-iconGhost" aria-label="布局" title="布局">⧉</button>
+                    <button type="button" class="tp-iconGhost" aria-label="设置" title="设置">⚙</button>
+                  </span>
+                </summary>
+                <div class="tp-queryPanel__body">
+                  <div class="tp-queryGrid">
+                    <div class="tp-field">
+                      <label class="tp-field__label">SPART编码</label>
+                      <input
+                        class="tp-input"
+                        type="text"
+                        placeholder="支持逗号、空格分隔批量查询"
+                      />
+                    </div>
+                    <div class="tp-field">
+                      <label class="tp-field__label">执源对象编码</label>
+                      <input
+                        class="tp-input"
+                        type="text"
+                        placeholder="支持逗号、空格分隔批量查询"
+                      />
+                    </div>
+                    <div class="tp-field">
+                      <label class="tp-field__label">SPART名称</label>
+                      <input class="tp-input" type="text" placeholder="请输入" />
+                    </div>
+                    <div class="tp-field">
+                      <label class="tp-field__label">生命周期状态</label>
+                      <select class="tp-select" aria-label="生命周期状态">
+                        <option>全部</option>
+                        <option>有效</option>
+                        <option>失效</option>
+                      </select>
+                    </div>
+                    <div class="tp-field">
+                      <label class="tp-field__label">是否预测SPART</label>
+                      <select class="tp-select" aria-label="是否预测SPART">
+                        <option>ALL</option>
+                        <option>Y</option>
+                        <option>N</option>
+                      </select>
+                    </div>
+                    <div class="tp-field">
+                      <label class="tp-field__label">模板类型</label>
+                      <select class="tp-select" aria-label="模板类型">
+                        <option>全部</option>
+                        <option>标准</option>
+                        <option>定制</option>
+                      </select>
+                    </div>
+                    <div class="tp-field">
+                      <label class="tp-field__label">产品线</label>
+                      <select class="tp-select" aria-label="产品线">
+                        <option>全部</option>
+                        <option>产品线 A</option>
+                        <option>产品线 B</option>
+                      </select>
+                    </div>
+                    <div class="tp-field">
+                      <label class="tp-field__label">产品</label>
+                      <select class="tp-select" aria-label="产品">
+                        <option>全部</option>
+                        <option>产品 001</option>
+                        <option>产品 002</option>
+                      </select>
+                    </div>
+                    <div class="tp-field">
+                      <label class="tp-field__label">创建时间</label>
+                      <div class="tp-inputWithAffix">
+                        <input class="tp-input" type="text" placeholder="请选择日期" />
+                        <span class="tp-inputWithAffix__suffix" aria-hidden="true">📅</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="tp-queryActions">
+                    <button class="tp-btn tp-btn--primary" type="button">查询</button>
+                    <button class="tp-btn tp-btn--secondary" type="button">重置</button>
+                  </div>
+                </div>
+              </details>
+            </section>
+
+            <section class="tp-tableSection" aria-label="SPART编码协同">
+              <div class="tp-tableSectionHeader">
+                <div class="tp-tableSectionHeader__left">
+                  <span class="tp-tableSectionTitle">SPART编码协同</span>
+                  <button class="tp-btn tp-btn--secondary" type="button">导出</button>
+                </div>
+                <div class="tp-tableSectionHeader__right">
+                  <button type="button" class="tp-iconGhost" aria-label="列设置">⚙</button>
+                  <button type="button" class="tp-iconGhost" aria-label="全屏">⛶</button>
+                </div>
+              </div>
+              <div class="tp-tableWrap" role="region" aria-label="数据表" tabindex="0">
+                <table class="tp-table">
+                  <thead>
+                    <tr>
+                      <th class="tp-th tp-th--index tp-th--sticky">序号</th>
+                      <th class="tp-th tp-th--check tp-th--sticky">
+                        <input type="checkbox" aria-label="全选" />
+                      </th>
+                      <th class="tp-th tp-th--actions tp-th--sticky">操作</th>
+                      <th class="tp-th">SPART编码</th>
+                      <th class="tp-th">BG</th>
+                      <th class="tp-th">产品线(PDM)</th>
+                      <th class="tp-th">产品(PDM)</th>
+                      <th class="tp-th">创建时间(PDM)</th>
+                      <th class="tp-th">SPART名称</th>
+                      <th class="tp-th">单位</th>
+                      <th class="tp-th">生命周期状态</th>
+                      <th class="tp-th">ITEM 类型</th>
+                      <th class="tp-th">模板类型</th>
+                      <th class="tp-th">业务类型</th>
+                      <th class="tp-th">有预测SLA</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="tp-td tp-td--index tp-td--sticky">1</td>
+                      <td class="tp-td tp-td--check tp-td--sticky">
+                        <input type="checkbox" aria-label="选择行1" />
+                      </td>
+                      <td class="tp-td tp-td--actions tp-td--sticky">
+                        <button class="tp-linkBtn" type="button">查看</button>
+                      </td>
+                      <td><a class="tp-link" href="#">SPART-001</a></td>
+                      <td>BG1</td>
+                      <td>PDM-L1</td>
+                      <td>PDM-P1</td>
+                      <td>2026-03-01 10:00</td>
+                      <td>示例 SPART A</td>
+                      <td>PCS</td>
+                      <td>有效</td>
+                      <td>成品</td>
+                      <td>标准</td>
+                      <td>自制</td>
+                      <td>Y</td>
+                    </tr>
+                    <tr>
+                      <td class="tp-td tp-td--index tp-td--sticky">2</td>
+                      <td class="tp-td tp-td--check tp-td--sticky">
+                        <input type="checkbox" aria-label="选择行2" />
+                      </td>
+                      <td class="tp-td tp-td--actions tp-td--sticky">
+                        <button class="tp-linkBtn" type="button">查看</button>
+                      </td>
+                      <td><a class="tp-link" href="#">SPART-002</a></td>
+                      <td>BG2</td>
+                      <td>PDM-L2</td>
+                      <td>PDM-P2</td>
+                      <td>2026-03-15 14:20</td>
+                      <td>示例 SPART B</td>
+                      <td>SET</td>
+                      <td>有效</td>
+                      <td>部件</td>
+                      <td>定制</td>
+                      <td>外购</td>
+                      <td><span class="tp-empty">--</span></td>
+                    </tr>
+                    <tr>
+                      <td class="tp-td tp-td--index tp-td--sticky">3</td>
+                      <td class="tp-td tp-td--check tp-td--sticky">
+                        <input type="checkbox" aria-label="选择行3" />
+                      </td>
+                      <td class="tp-td tp-td--actions tp-td--sticky">
+                        <button class="tp-linkBtn" type="button">查看</button>
+                      </td>
+                      <td><a class="tp-link" href="#">SPART-003</a></td>
+                      <td>BG1</td>
+                      <td><span class="tp-empty">--</span></td>
+                      <td>PDM-P3</td>
+                      <td>2026-04-01 09:00</td>
+                      <td>示例 SPART C</td>
+                      <td>PCS</td>
+                      <td>失效</td>
+                      <td>成品</td>
+                      <td>标准</td>
+                      <td>自制</td>
+                      <td>N</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="tp-tableFooter" aria-label="分页">
+                <span class="tp-meta">共 3 条</span>
+                <div class="tp-pagination">
+                  <select class="tp-select tp-select--small" aria-label="每页条数">
+                    <option selected>10</option>
+                    <option>20</option>
+                  </select>
+                  <button class="tp-iconBtn" type="button" aria-label="上一页">‹</button>
+                  <button class="tp-pageBtn tp-pageBtn--active" type="button">1</button>
+                  <button class="tp-iconBtn" type="button" aria-label="下一页">›</button>
+                  <span class="tp-meta">跳至</span>
+                  <input class="tp-input tp-input--tiny" type="text" value="1" aria-label="页码" />
+                  <span class="tp-meta">页</span>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <!-- Tab2：图表分析（占位，可接 ECharts / TinyVue） -->
+          <div
+            class="tp-tabPanel"
+            role="tabpanel"
+            id="tp-panel-1"
+            aria-labelledby="tp-tab-1"
+            hidden
+          >
+            <div class="tp-analyPage">
+              <div class="tp-kpiRow">
+                <div class="tp-kpiCard">
+                  <div class="tp-kpiCard__label">预测对象总数</div>
+                  <div class="tp-kpiCard__value">12,860</div>
+                  <div class="tp-kpiCard__trend">环比 +3.2%</div>
+                </div>
+                <div class="tp-kpiCard">
+                  <div class="tp-kpiCard__label">已协同占比</div>
+                  <div class="tp-kpiCard__value">78.4%</div>
+                  <div class="tp-kpiCard__trend">较上周 +1.1%</div>
+                </div>
+                <div class="tp-kpiCard">
+                  <div class="tp-kpiCard__label">异常待处理</div>
+                  <div class="tp-kpiCard__value">42</div>
+                  <div class="tp-kpiCard__trend" style="color: #faad14">需关注</div>
+                </div>
+              </div>
+              <div class="tp-chartCard">
+                <div class="tp-chartCard__title">周度协同量（示意柱状图）</div>
+                <div class="tp-barChart" aria-hidden="true">
+                  <div class="tp-barChart__item">
+                    <div class="tp-barChart__bar" style="height: 45%"></div>
+                    <span class="tp-barChart__label">W1</span>
+                  </div>
+                  <div class="tp-barChart__item">
+                    <div class="tp-barChart__bar" style="height: 72%"></div>
+                    <span class="tp-barChart__label">W2</span>
+                  </div>
+                  <div class="tp-barChart__item">
+                    <div class="tp-barChart__bar" style="height: 58%"></div>
+                    <span class="tp-barChart__label">W3</span>
+                  </div>
+                  <div class="tp-barChart__item">
+                    <div class="tp-barChart__bar" style="height: 88%"></div>
+                    <span class="tp-barChart__label">W4</span>
+                  </div>
+                  <div class="tp-barChart__item">
+                    <div class="tp-barChart__bar" style="height: 64%"></div>
+                    <span class="tp-barChart__label">W5</span>
+                  </div>
+                  <div class="tp-barChart__item">
+                    <div class="tp-barChart__bar" style="height: 92%"></div>
+                    <span class="tp-barChart__label">W6</span>
+                  </div>
+                </div>
+                <div class="tp-chartCard__title" style="margin-top: 8px">趋势示意（可替换为折线图组件）</div>
+                <div class="tp-lineMock" aria-hidden="true"></div>
+                <p class="tp-analyHint">
+                  交付单文件原型时，本区可替换为 ECharts / TinyVue-Vite 图表；保持 KPI 栅格 + 图表卡片的上下结构即可。
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="tp-tabPanel"
+            role="tabpanel"
+            id="tp-panel-2"
+            aria-labelledby="tp-tab-2"
+            hidden
+          >
+            <div class="tp-tabPlaceholder">S&amp;OP 对象协同查询 — 示例占位，可按 Tab1 形态扩展表单与表格。</div>
+          </div>
+          <div
+            class="tp-tabPanel"
+            role="tabpanel"
+            id="tp-panel-3"
+            aria-labelledby="tp-tab-3"
+            hidden
+          >
+            <div class="tp-tabPlaceholder">主计划对象协同查询 — 示例占位。</div>
+          </div>
+          <div
+            class="tp-tabPanel"
+            role="tabpanel"
+            id="tp-panel-4"
+            aria-labelledby="tp-tab-4"
+            hidden
+          >
+            <div class="tp-tabPlaceholder">对象协同查询（KPI视角）— 示例占位；亦可组合为纯 KPI + 图表大屏。</div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <script>
+      ;(function () {
+        var root = document.querySelector("[data-tp-tabs]")
+        if (!root) return
+        var tabs = root.querySelectorAll('.tp-mainTabBar [role="tab"]')
+        var panels = root.querySelectorAll(".tp-tabPanel")
+        tabs.forEach(function (tab, index) {
+          tab.addEventListener("click", function () {
+            tabs.forEach(function (t) {
+              t.setAttribute("aria-selected", "false")
+            })
+            panels.forEach(function (p) {
+              p.hidden = true
+            })
+            tab.setAttribute("aria-selected", "true")
+            if (panels[index]) panels[index].hidden = false
+          })
+        })
+        root.querySelectorAll(".tp-queryPanel__tabActions button").forEach(function (btn) {
+          btn.addEventListener("click", function (e) {
+            e.preventDefault()
+            e.stopPropagation()
+          })
+        })
+      })()
+    </script>
+  </body>
+</html>

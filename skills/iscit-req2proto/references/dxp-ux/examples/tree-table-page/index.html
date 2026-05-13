@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>树 + 表格示例</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="ux-page">
+      <div class="ux-content">
+        <section class="ux-split" aria-label="左树右表布局">
+          <aside class="ux-panel ux-panel--tree" aria-label="左侧树">
+            <div class="ux-panel__body">
+              <div class="ux-search">
+                <span class="ux-search__icon" aria-hidden="true">⌕</span>
+                <input class="ux-search__input" type="text" placeholder="请输入搜索" />
+              </div>
+
+              <div class="ux-tree" role="tree" aria-label="资源树">
+                <div class="ux-treeItem" role="treeitem" aria-expanded="true">
+                  <button class="ux-treeItem__toggle" type="button" aria-label="展开">▾</button>
+                  <label class="ux-treeItem__label">
+                    <input type="checkbox" />
+                    <span>主节点（23）</span>
+                  </label>
+                </div>
+                <div class="ux-treeChildren" role="group">
+                  <div class="ux-treeItem ux-treeItem--child" role="treeitem">
+                    <span class="ux-treeItem__spacer" aria-hidden="true"></span>
+                    <label class="ux-treeItem__label">
+                      <input type="checkbox" />
+                      <span>主节点（42）</span>
+                    </label>
+                  </div>
+                  <div class="ux-treeItem ux-treeItem--child" role="treeitem">
+                    <span class="ux-treeItem__spacer" aria-hidden="true"></span>
+                    <label class="ux-treeItem__label">
+                      <input type="checkbox" />
+                      <span>主节点（3）</span>
+                    </label>
+                  </div>
+                  <div class="ux-treeItem ux-treeItem--child" role="treeitem">
+                    <span class="ux-treeItem__spacer" aria-hidden="true"></span>
+                    <label class="ux-treeItem__label">
+                      <input type="checkbox" />
+                      <span>主节点（23）</span>
+                    </label>
+                  </div>
+                  <div class="ux-treeItem ux-treeItem--child" role="treeitem">
+                    <span class="ux-treeItem__spacer" aria-hidden="true"></span>
+                    <label class="ux-treeItem__label">
+                      <input type="checkbox" />
+                      <span>主节点（10）</span>
+                    </label>
+                  </div>
+                  <div class="ux-treeItem ux-treeItem--child" role="treeitem">
+                    <span class="ux-treeItem__spacer" aria-hidden="true"></span>
+                    <label class="ux-treeItem__label">
+                      <input type="checkbox" />
+                      <span>主节点（16）</span>
+                    </label>
+                  </div>
+                  <div class="ux-treeItem ux-treeItem--child" role="treeitem">
+                    <span class="ux-treeItem__spacer" aria-hidden="true"></span>
+                    <label class="ux-treeItem__label">
+                      <input type="checkbox" />
+                      <span>主节点（44）</span>
+                    </label>
+                  </div>
+                  <div class="ux-treeItem ux-treeItem--child" role="treeitem">
+                    <span class="ux-treeItem__spacer" aria-hidden="true"></span>
+                    <label class="ux-treeItem__label">
+                      <input type="checkbox" />
+                      <span>主节点（23）</span>
+                    </label>
+                  </div>
+                  <div class="ux-treeItem ux-treeItem--child" role="treeitem" aria-expanded="false">
+                    <button class="ux-treeItem__toggle" type="button" aria-label="展开">▸</button>
+                    <label class="ux-treeItem__label">
+                      <input type="checkbox" />
+                      <span>子节点（23）</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          <section class="ux-panel ux-panel--table" aria-label="右侧表格区">
+            <div class="ux-panel__body">
+              <div class="ux-stats" aria-label="统计">
+                <div class="ux-stat">
+                  <span class="ux-stat__label">监控异常</span>
+                  <span class="ux-stat__value ux-stat__value--danger">30</span>
+                </div>
+                <div class="ux-stat">
+                  <span class="ux-stat__label">安全异常</span>
+                  <span class="ux-stat__value">83</span>
+                </div>
+                <div class="ux-stat">
+                  <span class="ux-stat__label">有效量</span>
+                  <span class="ux-stat__value">14</span>
+                </div>
+              </div>
+
+              <div class="ux-toolbar" aria-label="工具栏">
+                <div class="ux-toolbar__left">
+                  <button class="ux-btn ux-btn--secondary" type="button">开机</button>
+                  <button class="ux-btn ux-btn--secondary" type="button">关机</button>
+                  <button class="ux-btn ux-btn--secondary" type="button">重置密码</button>
+                  <button class="ux-btn ux-btn--secondary" type="button">导出 ▾</button>
+                  <button class="ux-btn ux-btn--secondary" type="button">更多 ▾</button>
+                </div>
+              </div>
+
+              <section class="ux-searchRow" aria-label="搜索">
+                <div class="ux-search">
+                  <span class="ux-search__icon" aria-hidden="true">⌕</span>
+                  <input class="ux-search__input" type="text" placeholder="默认按关键字筛选，过滤" />
+                  <button class="ux-search__suffixBtn" type="button" aria-label="清空">×</button>
+                </div>
+                <button class="ux-iconBtn" type="button" aria-label="刷新">⟳</button>
+                <button class="ux-iconBtn" type="button" aria-label="设置">⚙</button>
+              </section>
+
+              <section class="ux-tableBlock" aria-label="表格">
+                <div class="ux-tableWrap" role="region" aria-label="表格滚动容器" tabindex="0">
+                  <table class="ux-table ux-table--dense">
+                    <thead>
+                      <tr>
+                        <th class="ux-th ux-th--checkbox"><input type="checkbox" aria-label="全选" /></th>
+                        <th class="ux-th ux-th--sortable">名称/ID<span class="ux-sort" aria-hidden="true">⇅</span></th>
+                        <th class="ux-th ux-th--sortable">运行/状态<span class="ux-sort" aria-hidden="true">⇅</span></th>
+                        <th class="ux-th ux-th--sortable">安全<span class="ux-sort" aria-hidden="true">⇅</span></th>
+                        <th class="ux-th ux-th--sortable">可用区<span class="ux-sort" aria-hidden="true">⇅</span></th>
+                        <th class="ux-th ux-th--sortable">规格<span class="ux-sort" aria-hidden="true">⇅</span></th>
+                        <th class="ux-th ux-th--sortable">IP 地址<span class="ux-sort" aria-hidden="true">⇅</span></th>
+                        <th class="ux-th ux-th--actions">操作</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr class="ux-row--highlight">
+                        <td class="ux-td ux-td--checkbox"><input type="checkbox" aria-label="选择行" /></td>
+                        <td>
+                          <div class="ux-cellMain"><a class="ux-linkText" href="#">ecs-1987</a></div>
+                          <div class="ux-cellSub">28ad62ba-ab3b…</div>
+                        </td>
+                        <td><span class="ux-dot ux-dot--gray" aria-hidden="true"></span>关机/冻结</td>
+                        <td><span class="ux-dot ux-dot--warning" aria-hidden="true"></span>异常</td>
+                        <td>可用区 1</td>
+                        <td>C7.large.2<br /><span class="ux-cellSub">2 核 4G</span></td>
+                        <td>139.150.160.207<br /><span class="ux-cellSub">192.168.0.214</span></td>
+                        <td class="ux-table__actions">
+                          <button class="ux-linkTextBtn" type="button">远程登录</button>
+                          <button class="ux-linkTextBtn" type="button">续费</button>
+                          <button class="ux-linkTextBtn" type="button">更多</button>
+                          <span class="ux-caret" aria-hidden="true">▾</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="ux-td ux-td--checkbox"><input type="checkbox" aria-label="选择行" /></td>
+                        <td>
+                          <div class="ux-cellMain"><a class="ux-linkText" href="#">ecs-1988</a></div>
+                          <div class="ux-cellSub">28ad62ba-ab3b…</div>
+                        </td>
+                        <td><span class="ux-dot ux-dot--success" aria-hidden="true"></span>运行中</td>
+                        <td><span class="ux-dot ux-dot--gray" aria-hidden="true"></span>未安装</td>
+                        <td>可用区 2</td>
+                        <td>s2.medium.4<br /><span class="ux-cellSub">1 核 2G</span></td>
+                        <td>139.150.160.207<br /><span class="ux-cellSub">192.168.0.214</span></td>
+                        <td class="ux-table__actions">
+                          <button class="ux-linkTextBtn" type="button">远程登录</button>
+                          <button class="ux-linkTextBtn" type="button">续费</button>
+                          <button class="ux-linkTextBtn" type="button">更多</button>
+                          <span class="ux-caret" aria-hidden="true">▾</span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="ux-tableFooter" aria-label="表格底部">
+                  <div class="ux-tableFooter__left">
+                    <span class="ux-metaText">总条数 153</span>
+                  </div>
+
+                  <div class="ux-pagination ux-pagination--right" aria-label="分页">
+                    <div class="ux-pagination__controls">
+                      <select class="ux-select ux-select--small" aria-label="每页条数">
+                        <option selected>10</option>
+                        <option>20</option>
+                        <option>50</option>
+                      </select>
+                      <button class="ux-iconBtn ux-iconBtn--ghost" type="button" aria-label="上一页">‹</button>
+                      <div class="ux-pagination__pages" aria-label="页码">
+                        <button class="ux-pageBtn" type="button">1</button>
+                        <button class="ux-pageBtn" type="button">2</button>
+                        <button class="ux-pageBtn" type="button">…</button>
+                        <button class="ux-pageBtn ux-pageBtn--active" type="button">14</button>
+                        <button class="ux-pageBtn" type="button">15</button>
+                        <button class="ux-pageBtn" type="button">16</button>
+                      </div>
+                      <button class="ux-iconBtn ux-iconBtn--ghost" type="button" aria-label="下一页">›</button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </section>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>
+

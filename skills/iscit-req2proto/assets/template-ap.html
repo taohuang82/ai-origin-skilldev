@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>供应链全球运输监控大屏</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+  <style>
+    /* ===== 科技感大屏 CSS 变量 ===== */
+    :root {
+      --ap-bg-deep:      #020B18;      /* 最深背景 */
+      --ap-bg-panel:     #061428;      /* 面板背景 */
+      --ap-bg-card:      #0A1F3C;      /* 卡片背景 */
+      --ap-border:       rgba(0,212,255,0.20);  /* 边框：科技蓝描边 */
+      --ap-border-glow:  rgba(0,212,255,0.50);
+
+      --ap-cyan:         #00D4FF;      /* 主色：青蓝 */
+      --ap-cyan-dim:     rgba(0,212,255,0.15);
+      --ap-blue:         #0D6EFD;
+      --ap-green:        #00E676;
+      --ap-green-dim:    rgba(0,230,118,0.15);
+      --ap-yellow:       #FFD600;
+      --ap-yellow-dim:   rgba(255,214,0,0.15);
+      --ap-red:          #FF3D57;
+      --ap-red-dim:      rgba(255,61,87,0.15);
+      --ap-orange:       #FF6D00;
+
+      --ap-text-primary:   #E8F4FF;
+      --ap-text-secondary: rgba(180,220,255,0.65);
+      --ap-text-dim:       rgba(120,170,220,0.45);
+
+      --ap-font: 'PingFang SC', 'Microsoft YaHei', -apple-system, Arial, sans-serif;
+
+      --ap-glow-cyan: 0 0 12px rgba(0,212,255,0.5), 0 0 32px rgba(0,212,255,0.2);
+      --ap-glow-green: 0 0 12px rgba(0,230,118,0.5);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--ap-font);
+      background: var(--ap-bg-deep);
+      color: var(--ap-text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* 全局背景网格纹理 */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ===== 顶部标题栏 ===== */
+    .screen-header {
+      position: relative;
+      z-index: 10;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      background: linear-gradient(180deg, rgba(0,30,60,0.95) 0%, rgba(2,11,24,0.8) 100%);
+      border-bottom: 1px solid var(--ap-border);
+      backdrop-filter: blur(4px);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header-logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #00D4FF, #0D6EFD);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      box-shadow: var(--ap-glow-cyan);
+    }
+    .header-title {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, #00D4FF, #E8F4FF 60%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .header-subtitle {
+      font-size: 12px;
+      color: var(--ap-text-secondary);
+      letter-spacing: 1px;
+    }
+
+    .header-center {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+    .header-kpi {
+      text-align: center;
+    }
+    .header-kpi-val {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--ap-cyan);
+      text-shadow: var(--ap-glow-cyan);
+      font-variant-numeric: tabular-nums;
+    }
+    .header-kpi-label {
+      font-size: 11px;
+      color: var(--ap-text-dim);
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
+    .header-divider {
+      width: 1px; height: 32px;
+      background: var(--ap-border);
+    }
+
+    .header-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+    }
+    .clock-time {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--ap-cyan);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 2px;
+    }
+    .clock-date {
+      font-size: 12px;
+      color: var(--ap-text-secondary);
+      letter-spacing: 1px;
+    }
+    .status-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--ap-green);
+    }
+    .status-dot::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--ap-green);
+      box-shadow: var(--ap-glow-green);
+      animation: blink 2s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* ===== 主内容布局 ===== */
+    .screen-body {
+      position: relative;
+      z-index: 1;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 320px 1fr 320px;
+      grid-template-rows: auto 1fr auto;
+      gap: 12px;
+      min-height: calc(100vh - 64px);
+    }
+
+    /* ===== 面板通用样式 ===== */
+    .panel {
+      background: var(--ap-bg-panel);
+      border: 1px solid var(--ap-border);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+    /* 面板四角装饰 */
+    .panel::before, .panel::after {
+      content: '';
+      position: absolute;
+      width: 12px; height: 12px;
+      border-color: var(--ap-cyan);
+      border-style: solid;
+      opacity: 0.6;
+    }
+    .panel::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; border-radius: 8px 0 0 0; }
+    .panel::after  { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; border-radius: 0 0 8px 0; }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px 8px;
+      border-bottom: 1px solid var(--ap-border);
+    }
+    .panel-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ap-text-primary);
+      letter-spacing: 1px;
+    }
+    .panel-title-bar {
+      width: 3px; height: 14px;
+      background: linear-gradient(180deg, var(--ap-cyan), transparent);
+      border-radius: 2px;
+    }
+    .panel-badge {
+      font-size: 11px;
+      padding: 1px 8px;
+      border-radius: 10px;
+      border: 1px solid var(--ap-border);
+      color: var(--ap-text-secondary);
+      background: var(--ap-cyan-dim);
+    }
+    .panel-body { padding: 12px 16px; }
+
+    /* ===== KPI 卡片行 ===== */
+    .kpi-row {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+    }
+    .kpi-card {
+      background: var(--ap-bg-card);
+      border: 1px solid var(--ap-border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      position: relative;
+      overflow: hidden;
+      cursor: default;
+      transition: border-color 0.3s;
+    }
+    .kpi-card:hover { border-color: var(--ap-border-glow); }
+    .kpi-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(0,212,255,0.04), transparent 60%);
+      pointer-events: none;
+    }
+    .kpi-icon {
+      font-size: 22px;
+      margin-bottom: 6px;
+      display: block;
+    }
+    .kpi-val {
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 4px;
+      font-variant-numeric: tabular-nums;
+    }
+    .kpi-val.cyan   { color: var(--ap-cyan);   text-shadow: var(--ap-glow-cyan); }
+    .kpi-val.green  { color: var(--ap-green);  text-shadow: var(--ap-glow-green); }
+    .kpi-val.yellow { color: var(--ap-yellow); }
+    .kpi-val.red    { color: var(--ap-red); }
+    .kpi-val.blue   { color: #60B0FF; }
+    .kpi-val.orange { color: var(--ap-orange); }
+    .kpi-label {
+      font-size: 12px;
+      color: var(--ap-text-secondary);
+      letter-spacing: 0.5px;
+    }
+    .kpi-trend {
+      position: absolute;
+      top: 14px; right: 14px;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .kpi-trend.up   { color: var(--ap-green); }
+    .kpi-trend.down { color: var(--ap-red); }
+
+    /* ===== 地图中间区域 ===== */
+    .map-panel {
+      grid-column: 2 / 3;
+      grid-row: 2 / 3;
+      min-height: 400px;
+    }
+    .map-chart {
+      width: 100%;
+      height: 100%;
+      min-height: 380px;
+    }
+
+    /* ===== 左右侧面板 ===== */
+    .left-col {
+      grid-column: 1;
+      grid-row: 2 / 4;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: calc(100vh - 64px - 100px - 32px);
+      overflow: hidden;
+    }
+    .right-col {
+      grid-column: 3;
+      grid-row: 2 / 4;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: calc(100vh - 64px - 100px - 32px);
+      overflow: hidden;
+    }
+
+    /* ===== 底部面板 ===== */
+    .bottom-row {
+      grid-column: 2;
+      grid-row: 3;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* ===== 图表容器 ===== */
+    .chart-box {
+      width: 100%;
+    }
+
+    /* ===== 滚动列表 ===== */
+    .scroll-list {
+      overflow: hidden;
+      position: relative;
+    }
+    .scroll-list-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .list-row {
+      display: flex;
+      align-items: center;
+      padding: 8px 10px;
+      background: rgba(0,212,255,0.03);
+      border: 1px solid rgba(0,212,255,0.08);
+      border-radius: 4px;
+      font-size: 12px;
+      gap: 10px;
+      transition: background 0.2s;
+    }
+    .list-row:hover { background: rgba(0,212,255,0.08); }
+    .list-row-id {
+      color: var(--ap-cyan);
+      font-weight: 600;
+      white-space: nowrap;
+      min-width: 90px;
+    }
+    .list-row-info { flex: 1; color: var(--ap-text-secondary); }
+    .list-row-val { white-space: nowrap; font-weight: 600; }
+    .list-row-status {
+      white-space: nowrap;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+    }
+    .status-transit   { background: rgba(0,212,255,0.15); color: var(--ap-cyan); }
+    .status-delivered { background: rgba(0,230,118,0.15); color: var(--ap-green); }
+    .status-delay     { background: rgba(255,61,87,0.15);  color: var(--ap-red); }
+    .status-customs   { background: rgba(255,214,0,0.15);  color: var(--ap-yellow); }
+
+    /* 进度条 */
+    .progress-item { margin-bottom: 10px; }
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+    .progress-label { color: var(--ap-text-secondary); }
+    .progress-val   { color: var(--ap-text-primary); font-weight: 600; }
+    .progress-bar {
+      height: 6px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 3px;
+      position: relative;
+      transition: width 1s ease;
+    }
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      right: 0; top: 0; bottom: 0;
+      width: 20px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4));
+      border-radius: 3px;
+    }
+    .fill-cyan   { background: linear-gradient(90deg, #006A8E, var(--ap-cyan)); }
+    .fill-green  { background: linear-gradient(90deg, #006633, var(--ap-green)); }
+    .fill-yellow { background: linear-gradient(90deg, #7A6500, var(--ap-yellow)); }
+    .fill-red    { background: linear-gradient(90deg, #7A001A, var(--ap-red)); }
+    .fill-blue   { background: linear-gradient(90deg, #003A80, #60B0FF); }
+
+    /* 告警列表 */
+    .alert-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 4px;
+      margin-bottom: 6px;
+      font-size: 12px;
+      border-left: 3px solid transparent;
+    }
+    .alert-high   { background: rgba(255,61,87,0.08);   border-color: var(--ap-red); }
+    .alert-medium { background: rgba(255,214,0,0.08);   border-color: var(--ap-yellow); }
+    .alert-low    { background: rgba(0,212,255,0.06);   border-color: var(--ap-cyan); }
+    .alert-icon   { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+    .alert-content { flex: 1; }
+    .alert-title  { color: var(--ap-text-primary); font-weight: 500; margin-bottom: 2px; }
+    .alert-time   { color: var(--ap-text-dim); font-size: 11px; }
+
+    /* 数字滚动动画 */
+    @keyframes countUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .kpi-val { animation: countUp 0.8s ease forwards; }
+
+    /* 扫描线动画 */
+    .scan-line {
+      position: absolute;
+      left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--ap-cyan), transparent);
+      opacity: 0.4;
+      animation: scan 4s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes scan {
+      from { top: 0; }
+      to   { top: 100%; }
+    }
+
+    /* 响应式 */
+    @media (max-width: 1400px) {
+      .kpi-row { grid-template-columns: repeat(3, 1fr); }
+      .screen-body { grid-template-columns: 280px 1fr 280px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- 顶部标题栏 -->
+<header class="screen-header">
+  <div class="header-left">
+    <div class="header-logo-icon">🌐</div>
+    <div>
+      <div class="header-title">供应链全球运输监控中心</div>
+      <div class="header-subtitle">SUPPLY CHAIN GLOBAL LOGISTICS MONITORING</div>
+    </div>
+  </div>
+
+  <div class="header-center">
+    <div class="header-kpi">
+      <div class="header-kpi-val" id="hd-orders">2,847</div>
+      <div class="header-kpi-label">在途订单</div>
+    </div>
+    <div class="header-divider"></div>
+    <div class="header-kpi">
+      <div class="header-kpi-val" id="hd-ontime">94.2%</div>
+      <div class="header-kpi-label">准时交货率</div>
+    </div>
+    <div class="header-divider"></div>
+    <div class="header-kpi">
+      <div class="header-kpi-val" id="hd-alert" style="color:#FFD600">12</div>
+      <div class="header-kpi-label">异常预警</div>
+    </div>
+    <div class="header-divider"></div>
+    <div class="header-kpi">
+      <div class="header-kpi-val" id="hd-routes">38</div>
+      <div class="header-kpi-label">活跃航线</div>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <div class="clock-time" id="clock">00:00:00</div>
+    <div class="clock-date" id="clock-date">2024-03-15 星期五</div>
+    <div class="status-dot">系统运行正常</div>
+  </div>
+</header>
+
+<!-- 主内容区 -->
+<div class="screen-body">
+
+  <!-- KPI 卡片行 -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <span class="kpi-icon">📦</span>
+      <div class="kpi-val cyan" id="kpi-shipped">18,432</div>
+      <div class="kpi-label">本月发货量（件）</div>
+      <div class="kpi-trend up">↑ 8.3%</div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-icon">🚢</span>
+      <div class="kpi-val blue" id="kpi-intransit">2,847</div>
+      <div class="kpi-label">在途货物（批次）</div>
+      <div class="kpi-trend up">↑ 3.1%</div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-icon">✅</span>
+      <div class="kpi-val green" id="kpi-ontime">94.2%</div>
+      <div class="kpi-label">准时交货率</div>
+      <div class="kpi-trend up">↑ 1.2%</div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-icon">⏱</span>
+      <div class="kpi-val yellow">6.8天</div>
+      <div class="kpi-label">平均运输时效</div>
+      <div class="kpi-trend down">↓ 0.3天</div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-icon">⚠️</span>
+      <div class="kpi-val red">12</div>
+      <div class="kpi-label">延误预警（票）</div>
+      <div class="kpi-trend down">↑ 2</div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-icon">🏭</span>
+      <div class="kpi-val orange">¥ 3,280万</div>
+      <div class="kpi-label">本月运输成本</div>
+      <div class="kpi-trend up">↑ 5.6%</div>
+    </div>
+  </div>
+
+  <!-- 左侧面板 -->
+  <div class="left-col">
+
+    <!-- 订单来源分布 -->
+    <div class="panel" style="flex:0 0 auto">
+      <div class="scan-line"></div>
+      <div class="panel-header">
+        <div class="panel-title">
+          <div class="panel-title-bar"></div>
+          运输方式占比
+        </div>
+        <span class="panel-badge">实时</span>
+      </div>
+      <div class="panel-body">
+        <div class="chart-box" id="chart-transport" style="height:160px"></div>
+      </div>
+    </div>
+
+    <!-- 各区域发货量 -->
+    <div class="panel" style="flex:1">
+      <div class="panel-header">
+        <div class="panel-title">
+          <div class="panel-title-bar"></div>
+          区域发货量排行
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="progress-item">
+          <div class="progress-header">
+            <span class="progress-label">🇨🇳 华东地区</span>
+            <span class="progress-val">5,820件</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill fill-cyan" style="width:92%"></div></div>
+        </div>
+        <div class="progress-item">
+          <div class="progress-header">
+            <span class="progress-label">🇨🇳 华南地区</span>
+            <span class="progress-val">4,360件</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill fill-blue" style="width:70%"></div></div>
+        </div>
+        <div class="progress-item">
+          <div class="progress-header">
+            <span class="progress-label">🇺🇸 北美</span>
+            <span class="progress-val">3,240件</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill fill-green" style="width:52%"></div></div>
+        </div>
+        <div class="progress-item">
+          <div class="progress-header">
+            <span class="progress-label">🇩🇪 欧洲</span>
+            <span class="progress-val">2,810件</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill fill-yellow" style="width:45%"></div></div>
+        </div>
+        <div class="progress-item">
+          <div class="progress-header">
+            <span class="progress-label">🌏 东南亚</span>
+            <span class="progress-val">1,920件</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill fill-red" style="width:31%"></div></div>
+        </div>
+        <div class="progress-item" style="margin-bottom:0">
+          <div class="progress-header">
+            <span class="progress-label">🌍 中东</span>
+            <span class="progress-val">280件</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill fill-cyan" style="width:8%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 承运商绩效 -->
+    <div class="panel" style="flex:0 0 auto">
+      <div class="panel-header">
+        <div class="panel-title">
+          <div class="panel-title-bar"></div>
+          承运商准时率
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="chart-box" id="chart-carrier" style="height:130px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 中间地图 -->
+  <div class="panel map-panel">
+    <div class="scan-line" style="animation-duration:6s"></div>
+    <div class="panel-header">
+      <div class="panel-title">
+        <div class="panel-title-bar"></div>
+        全球物流实时追踪
+      </div>
+      <div style="display:flex;gap:16px;font-size:11px;color:var(--ap-text-secondary)">
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;background:var(--ap-cyan);border-radius:50%;display:inline-block"></span>海运</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;background:var(--ap-green);border-radius:50%;display:inline-block"></span>空运</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;background:var(--ap-yellow);border-radius:50%;display:inline-block"></span>陆运</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;background:var(--ap-red);border-radius:50%;display:inline-block"></span>延误</span>
+      </div>
+    </div>
+    <div class="panel-body" style="padding:8px;height:calc(100% - 48px)">
+      <div class="chart-box" id="chart-map" style="height:100%;min-height:340px"></div>
+    </div>
+  </div>
+
+  <!-- 右侧面板 -->
+  <div class="right-col">
+
+    <!-- 月度趋势 -->
+    <div class="panel" style="flex:0 0 auto">
+      <div class="panel-header">
+        <div class="panel-title">
+          <div class="panel-title-bar"></div>
+          近7日发货趋势
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="chart-box" id="chart-trend" style="height:140px"></div>
+      </div>
+    </div>
+
+    <!-- 异常预警 -->
+    <div class="panel" style="flex:1;min-height:0;overflow:hidden">
+      <div class="scan-line" style="animation-duration:3s;opacity:0.3"></div>
+      <div class="panel-header">
+        <div class="panel-title">
+          <div class="panel-title-bar"></div>
+          异常预警
+        </div>
+        <span class="panel-badge" style="color:var(--ap-red);border-color:rgba(255,61,87,0.3);background:rgba(255,61,87,0.1)">7条</span>
+      </div>
+      <div class="panel-body">
+        <div class="alert-row alert-high">
+          <div class="alert-icon">🔴</div>
+          <div class="alert-content">
+            <div class="alert-title">SHP-20240315-0892 超时未到港</div>
+            <div class="alert-time">预计延误 3天 · 上海→汉堡 · 02:18更新</div>
+          </div>
+        </div>
+        <div class="alert-row alert-high">
+          <div class="alert-icon">🔴</div>
+          <div class="alert-content">
+            <div class="alert-title">SHP-20240315-0756 海关查验滞留</div>
+            <div class="alert-time">已滞留 28小时 · 洛杉矶港 · 01:45更新</div>
+          </div>
+        </div>
+        <div class="alert-row alert-high">
+          <div class="alert-icon">🔴</div>
+          <div class="alert-content">
+            <div class="alert-title">SHP-20240315-0634 温控超标预警</div>
+            <div class="alert-time">冷链温度超限 2℃ · 宁波→新加坡 · 03:05更新</div>
+          </div>
+        </div>
+        <div class="alert-row alert-medium">
+          <div class="alert-icon">🟡</div>
+          <div class="alert-content">
+            <div class="alert-title">3票货物即将超出安全库存</div>
+            <div class="alert-time">华东仓 · 建议补货 · 00:30更新</div>
+          </div>
+        </div>
+        <div class="alert-row alert-medium">
+          <div class="alert-icon">🟡</div>
+          <div class="alert-content">
+            <div class="alert-title">迪拜港清关延迟 48h+</div>
+            <div class="alert-time">影响 2票 · 预估损失 ¥5.2万 · 01:12更新</div>
+          </div>
+        </div>
+        <div class="alert-row alert-low">
+          <div class="alert-icon">🔵</div>
+          <div class="alert-content">
+            <div class="alert-title">顺丰速运价格上浮 12%</div>
+            <div class="alert-time">影响 8票待发货 · 建议审核 · 昨日</div>
+          </div>
+        </div>
+        <div class="alert-row alert-low" style="margin-bottom:0">
+          <div class="alert-icon">🔵</div>
+          <div class="alert-content">
+            <div class="alert-title">鹿特丹港周末限流通知</div>
+            <div class="alert-time">4/19-4/20 卸货效率降低 · 建议提前 · 昨日</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部双图 -->
+  <div class="bottom-row">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><div class="panel-title-bar"></div>本月订单量 vs 完成量</div>
+      </div>
+      <div class="panel-body">
+        <div class="chart-box" id="chart-order-bar" style="height:160px"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><div class="panel-title-bar"></div>各品类运输成本占比</div>
+      </div>
+      <div class="panel-body">
+        <div class="chart-box" id="chart-cost" style="height:160px"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /screen-body -->
+
+<script>
+// ===== 科技感大屏主逻辑 =====
+
+const DARK_THEME = {
+  backgroundColor: 'transparent',
+  textStyle: { color: 'rgba(180,220,255,0.65)', fontFamily: "'PingFang SC','Microsoft YaHei',Arial,sans-serif" },
+  color: ['#00D4FF','#00E676','#FFD600','#FF3D57','#60B0FF','#FF6D00'],
+};
+const allCharts = [];
+function makeChart(id) {
+  const c = echarts.init(document.getElementById(id), null, { renderer: 'canvas' });
+  allCharts.push(c);
+  return c;
+}
+
+// ---- 时钟 ----
+function updateClock() {
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  document.getElementById('clock').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  const days = ['日','一','二','三','四','五','六'];
+  document.getElementById('clock-date').textContent =
+    `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} 星期${days[now.getDay()]}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ---- 1. 运输方式占比（环形图）----
+const chartTransport = makeChart('chart-transport');
+chartTransport.setOption({
+  ...DARK_THEME,
+  tooltip: { trigger: 'item', formatter: '{b}: {c}批次 ({d}%)' },
+  legend: {
+    orient: 'vertical', right: '5%', top: 'center',
+    textStyle: { color: 'rgba(180,220,255,0.65)', fontSize: 11 },
+    itemWidth: 8, itemHeight: 8,
+  },
+  series: [{
+    type: 'pie', radius: ['45%','70%'], center: ['35%','50%'],
+    label: { show: false },
+    data: [
+      { value: 1240, name: '海运' },
+      { value: 820,  name: '空运' },
+      { value: 560,  name: '陆运' },
+      { value: 227,  name: '铁路' },
+    ],
+    itemStyle: { borderColor: '#061428', borderWidth: 2, shadowBlur: 8, shadowColor: 'rgba(0,212,255,0.3)' },
+  }],
+});
+
+// ---- 2. 承运商准时率（横向柱图）----
+const chartCarrier = makeChart('chart-carrier');
+chartCarrier.setOption({
+  ...DARK_THEME,
+  grid: { left: 70, right: 40, top: 8, bottom: 4 },
+  xAxis: {
+    type: 'value', max: 100,
+    axisLine: { show: false }, axisTick: { show: false },
+    axisLabel: { color: 'rgba(180,220,255,0.4)', fontSize: 10, formatter: '{value}%' },
+    splitLine: { lineStyle: { color: 'rgba(0,212,255,0.06)' } },
+  },
+  yAxis: {
+    type: 'category',
+    data: ['德邦物流','顺丰速运','中远海运','马士基','联合包裹'],
+    axisLine: { show: false }, axisTick: { show: false },
+    axisLabel: { color: 'rgba(180,220,255,0.65)', fontSize: 11 },
+  },
+  series: [{
+    type: 'bar', barWidth: 10,
+    data: [
+      { value: 96.2, itemStyle: { color: '#00E676' } },
+      { value: 93.8, itemStyle: { color: '#00D4FF' } },
+      { value: 91.5, itemStyle: { color: '#00D4FF' } },
+      { value: 88.0, itemStyle: { color: '#FFD600' } },
+      { value: 84.3, itemStyle: { color: '#FF3D57' } },
+    ],
+    label: { show: true, position: 'right', color: 'rgba(180,220,255,0.8)', fontSize: 11, formatter: '{c}%' },
+    itemStyle: { borderRadius: [0,4,4,0] },
+    showBackground: true,
+    backgroundStyle: { color: 'rgba(0,212,255,0.04)', borderRadius: [0,4,4,0] },
+  }],
+});
+
+// ---- 3. 全球物流实时追踪（异步加载世界地图）----
+const chartMap = makeChart('chart-map');
+chartMap.showLoading({ text: '地图加载中...', color: '#00D4FF', textColor: 'rgba(180,220,255,0.65)', maskColor: 'rgba(2,11,24,0.8)' });
+
+var MAP_URLS = [
+  'https://echarts.apache.org/examples/data/asset/geo/world.json',
+  'https://cdn.jsdelivr.net/npm/echarts-map@3.0.1/json/world.json'
+];
+function fetchMapJson(urls) {
+  return urls.reduce(function(promise, url) {
+    return promise.catch(function() { return fetch(url).then(function(r) { if(!r.ok) throw new Error(r.status); return r.json(); }); });
+  }, Promise.reject());
+}
+fetchMapJson(MAP_URLS)
+  .then(function(worldJson) {
+    echarts.registerMap('world', worldJson);
+    chartMap.hideLoading();
+
+    const portNodes = [
+      { name:'上海',     value:[121.47, 31.23, 580] },
+      { name:'广州',     value:[113.26, 23.12, 420] },
+      { name:'宁波',     value:[121.55, 29.87, 310] },
+      { name:'深圳',     value:[114.07, 22.62, 350] },
+      { name:'洛杉矶',   value:[-118.24, 34.05, 280] },
+      { name:'汉堡',     value:[10.00, 53.55, 210] },
+      { name:'新加坡',   value:[103.82, 1.35, 190] },
+      { name:'迪拜',     value:[55.30, 25.20, 120] },
+      { name:'鹿特丹',   value:[4.48, 51.90, 160] },
+      { name:'纽约',     value:[-74.00, 40.71, 140] },
+      { name:'东京',     value:[139.69, 35.69, 200] },
+      { name:'悉尼',     value:[151.21, -33.87, 110] },
+      { name:'孟买',     value:[72.88, 19.08, 95] },
+    ];
+    const airNodes = [
+      { name:'浦东机场',     value:[121.80, 31.14, 180] },
+      { name:'法兰克福机场', value:[8.57, 50.03, 150] },
+      { name:'香港机场',     value:[113.91, 22.31, 130] },
+      { name:'仁川机场',     value:[126.45, 37.47, 100] },
+    ];
+    const delayNodes = [
+      { name:'延误-洛杉矶', value:[-118.24, 33.90, 80] },
+      { name:'延误-汉堡港', value:[9.90, 53.50, 60] },
+    ];
+
+    const seaRoutes = [
+      { coords:[[121.47,31.23],[-118.24,34.05]], lineStyle:{color:'#00D4FF'} },
+      { coords:[[121.47,31.23],[10.00,53.55]],   lineStyle:{color:'#00D4FF'} },
+      { coords:[[113.26,23.12],[103.82,1.35]],   lineStyle:{color:'#00D4FF'} },
+      { coords:[[121.55,29.87],[4.48,51.90]],    lineStyle:{color:'#00D4FF'} },
+      { coords:[[114.07,22.62],[55.30,25.20]],   lineStyle:{color:'#00D4FF'} },
+      { coords:[[103.82,1.35],[151.21,-33.87]],  lineStyle:{color:'#00D4FF'} },
+      { coords:[[72.88,19.08],[55.30,25.20]],    lineStyle:{color:'#00D4FF'} },
+    ];
+    const airRoutes = [
+      { coords:[[121.80,31.14],[8.57,50.03]],    lineStyle:{color:'#00E676'} },
+      { coords:[[113.91,22.31],[139.69,35.69]],  lineStyle:{color:'#00E676'} },
+      { coords:[[126.45,37.47],[-74.00,40.71]],  lineStyle:{color:'#00E676'} },
+    ];
+
+    chartMap.setOption({
+      ...DARK_THEME,
+      geo: {
+        map: 'world', silent: true, roam: false,
+        top: 10, bottom: 10, left: 10, right: 10,
+        label: { show: false },
+        itemStyle: { areaColor: '#0A1F3C', borderColor: 'rgba(0,212,255,0.18)', borderWidth: 0.5 },
+        emphasis: { itemStyle: { areaColor: '#0D2A4A' } },
+      },
+      tooltip: {
+        trigger: 'item',
+        backgroundColor: 'rgba(6,20,40,0.92)',
+        borderColor: 'rgba(0,212,255,0.3)',
+        textStyle: { color: '#E8F4FF', fontSize: 12 },
+        formatter: function(p) {
+          if (p.seriesType === 'lines') return '';
+          if (p.value && p.value[2] !== undefined) return p.name + '<br/>货运量：' + p.value[2] + ' 批次';
+          return p.name;
+        },
+      },
+      series: [
+        {
+          name: '海运港口', type: 'effectScatter', coordinateSystem: 'geo',
+          data: portNodes,
+          symbolSize: function(val){ return Math.max(6, Math.sqrt(val[2]) * 1.1); },
+          showEffectOn: 'render',
+          rippleEffect: { brushType: 'stroke', scale: 3, period: 4 },
+          itemStyle: { color: '#00D4FF', shadowBlur: 10, shadowColor: '#00D4FF' },
+          zlevel: 2,
+        },
+        {
+          name: '海运航线', type: 'lines', coordinateSystem: 'geo', zlevel: 1,
+          effect: { show: true, period: 5, trailLength: 0.15, symbol: 'arrow', symbolSize: 5, color: '#00D4FF' },
+          lineStyle: { width: 1.2, opacity: 0.3, curveness: 0.25 },
+          data: seaRoutes,
+        },
+        {
+          name: '空运机场', type: 'scatter', coordinateSystem: 'geo',
+          data: airNodes,
+          symbolSize: function(val){ return Math.max(6, Math.sqrt(val[2])); },
+          itemStyle: { color: '#00E676', shadowBlur: 8, shadowColor: '#00E676', opacity: 0.9 },
+          symbol: 'diamond',
+          zlevel: 2,
+        },
+        {
+          name: '空运航线', type: 'lines', coordinateSystem: 'geo', zlevel: 1,
+          effect: { show: true, period: 3, trailLength: 0.2, symbol: 'triangle', symbolSize: 4, color: '#00E676' },
+          lineStyle: { width: 1, opacity: 0.25, curveness: 0.3, type: 'dashed' },
+          data: airRoutes,
+        },
+        {
+          name: '延误预警', type: 'effectScatter', coordinateSystem: 'geo',
+          data: delayNodes,
+          symbolSize: 14,
+          showEffectOn: 'render',
+          rippleEffect: { brushType: 'fill', scale: 5, period: 2 },
+          itemStyle: { color: '#FF3D57', shadowBlur: 14, shadowColor: '#FF3D57' },
+          zlevel: 3,
+        },
+      ],
+    });
+  })
+  .catch(function() {
+    chartMap.hideLoading();
+    chartMap.setOption({
+      ...DARK_THEME,
+      title: { text: '地图数据加载失败，请检查网络', left:'center', top:'center',
+        textStyle:{ color:'rgba(180,220,255,0.5)', fontSize:14 } },
+    });
+  });
+
+// ---- 4. 近7日发货趋势（双折线）----
+const chartTrend = makeChart('chart-trend');
+chartTrend.setOption({
+  ...DARK_THEME,
+  grid: { left: 36, right: 12, top: 16, bottom: 32 },
+  xAxis: {
+    type: 'category',
+    data: ['4/8','4/9','4/10','4/11','4/12','4/13','4/14'],
+    axisLine: { lineStyle: { color: 'rgba(0,212,255,0.15)' } },
+    axisTick: { show: false },
+    axisLabel: { color: 'rgba(180,220,255,0.5)', fontSize: 11 },
+  },
+  yAxis: {
+    type: 'value',
+    splitLine: { lineStyle: { color: 'rgba(0,212,255,0.06)' } },
+    axisLabel: { color: 'rgba(180,220,255,0.4)', fontSize: 10 },
+  },
+  tooltip: {
+    trigger: 'axis',
+    backgroundColor: 'rgba(6,20,40,0.9)',
+    borderColor: 'rgba(0,212,255,0.3)',
+    textStyle: { color: '#E8F4FF' },
+  },
+  legend: {
+    bottom: 0, textStyle: { color: 'rgba(180,220,255,0.65)', fontSize: 11 },
+    itemWidth: 10, itemHeight: 4,
+  },
+  series: [
+    {
+      name: '发货量', type: 'line', smooth: true,
+      data: [520, 630, 580, 710, 680, 750, 840],
+      lineStyle: { color: '#00D4FF', width: 2 },
+      itemStyle: { color: '#00D4FF' },
+      areaStyle: {
+        color: { type:'linear', x:0,y:0,x2:0,y2:1,
+          colorStops:[{offset:0,color:'rgba(0,212,255,0.25)'},{offset:1,color:'rgba(0,212,255,0)'}]
+        }
+      },
+      symbol: 'circle', symbolSize: 5,
+    },
+    {
+      name: '签收量', type: 'line', smooth: true,
+      data: [490, 600, 550, 680, 650, 710, 800],
+      lineStyle: { color: '#00E676', width: 2 },
+      itemStyle: { color: '#00E676' },
+      areaStyle: {
+        color: { type:'linear', x:0,y:0,x2:0,y2:1,
+          colorStops:[{offset:0,color:'rgba(0,230,118,0.15)'},{offset:1,color:'rgba(0,230,118,0)'}]
+        }
+      },
+      symbol: 'circle', symbolSize: 5,
+    },
+  ],
+});
+
+// ---- 5. 本月订单量 vs 完成量（分组柱图）----
+const chartOrderBar = makeChart('chart-order-bar');
+chartOrderBar.setOption({
+  ...DARK_THEME,
+  grid: { left: 40, right: 16, top: 16, bottom: 32 },
+  xAxis: {
+    type: 'category',
+    data: ['第1周','第2周','第3周','第4周（当前）'],
+    axisLine: { lineStyle: { color: 'rgba(0,212,255,0.15)' } },
+    axisTick: { show: false },
+    axisLabel: { color: 'rgba(180,220,255,0.5)', fontSize: 11 },
+  },
+  yAxis: {
+    type: 'value',
+    splitLine: { lineStyle: { color: 'rgba(0,212,255,0.06)' } },
+    axisLabel: { color: 'rgba(180,220,255,0.4)', fontSize: 10 },
+  },
+  tooltip: {
+    trigger: 'axis',
+    backgroundColor: 'rgba(6,20,40,0.9)',
+    borderColor: 'rgba(0,212,255,0.3)',
+    textStyle: { color: '#E8F4FF' },
+  },
+  legend: {
+    bottom: 0, textStyle: { color: 'rgba(180,220,255,0.65)', fontSize: 11 },
+    itemWidth: 10, itemHeight: 8,
+  },
+  series: [
+    {
+      name: '订单量', type: 'bar', barWidth: 18, barGap: '30%',
+      data: [4800, 4620, 5010, 4002],
+      itemStyle: {
+        color: { type:'linear',x:0,y:0,x2:0,y2:1,
+          colorStops:[{offset:0,color:'rgba(0,212,255,0.9)'},{offset:1,color:'rgba(0,212,255,0.15)'}]
+        },
+        borderRadius: [4,4,0,0],
+      },
+    },
+    {
+      name: '完成量', type: 'bar', barWidth: 18,
+      data: [4580, 4400, 4820, 3210],
+      itemStyle: {
+        color: { type:'linear',x:0,y:0,x2:0,y2:1,
+          colorStops:[{offset:0,color:'rgba(0,230,118,0.9)'},{offset:1,color:'rgba(0,230,118,0.15)'}]
+        },
+        borderRadius: [4,4,0,0],
+      },
+    },
+  ],
+});
+
+// ---- 6. 各品类运输成本占比（环形图）----
+const chartCost = makeChart('chart-cost');
+chartCost.setOption({
+  ...DARK_THEME,
+  tooltip: {
+    trigger: 'item',
+    formatter: '{b}: ¥{c}万 ({d}%)',
+    backgroundColor: 'rgba(6,20,40,0.9)',
+    borderColor: 'rgba(0,212,255,0.3)',
+    textStyle: { color: '#E8F4FF' },
+  },
+  legend: {
+    orient: 'vertical', right: '3%', top: 'center',
+    textStyle: { color: 'rgba(180,220,255,0.65)', fontSize: 11 },
+    itemWidth: 8, itemHeight: 8,
+  },
+  series: [{
+    type: 'pie', radius: ['42%','68%'], center: ['35%','50%'],
+    label: { show: false },
+    data: [
+      { value: 1280, name: '电子元器件' },
+      { value: 820,  name: '机械设备' },
+      { value: 640,  name: '化工原料' },
+      { value: 310,  name: '纺织服装' },
+      { value: 230,  name: '食品冷链' },
+    ],
+    itemStyle: { borderColor: '#061428', borderWidth: 2, shadowBlur: 6, shadowColor: 'rgba(0,212,255,0.2)' },
+  }],
+});
+
+// ---- 模拟实时数据跳动 ----
+var liveShipped = 18432;
+var liveInTransit = 2847;
+
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function tickCycle() {
+  // T+0s: 发货量递增 1~5
+  liveShipped += randInt(1, 5);
+  document.getElementById('kpi-shipped').textContent = liveShipped.toLocaleString();
+
+  // T+1s: 在途货物在 -10 ~ +30 区间变化
+  setTimeout(function() {
+    liveInTransit = Math.max(0, liveInTransit + randInt(-10, 30));
+    document.getElementById('kpi-intransit').textContent = liveInTransit.toLocaleString();
+    document.getElementById('hd-orders').textContent = liveInTransit.toLocaleString();
+  }, 1000);
+
+  // T+2s: 准时交货率在 93.1% ~ 97.8% 之间随机
+  setTimeout(function() {
+    var rate = (93.1 + Math.random() * (97.8 - 93.1)).toFixed(1);
+    document.getElementById('kpi-ontime').textContent = rate + '%';
+    document.getElementById('hd-ontime').textContent = rate + '%';
+  }, 2000);
+}
+
+setInterval(tickCycle, 5000);
+tickCycle();
+
+// ---- 自适应 resize ----
+window.addEventListener('resize', function() {
+  allCharts.forEach(function(c) { c.resize(); });
+});
+</script>
+
+<!--
+  ========== 开发移交说明 ==========
+  页面类型：AP（分析类）大屏看板
+  页面名称：供应链全球运输监控大屏
+  视觉规范：科技感暗色主题（自定义，非TinyVue标准组件）
+  图表库：ECharts 5.5.1 (CDN)
+  地图：异步加载 world.json 注册后渲染 geo + 散点 + 航线(海运7条+空运3条)
+  数据存储：模拟数据（KPI/订单/图表）
+  实时刷新：时钟每秒更新，KPI 数字每5秒模拟跳动
+  主要图表：环形图×2、横向柱图、双折线面积图、分组柱图、世界地图(散点+航线+延误预警)
+  在途订单：10条示例数据，含在途/已到达/延误/清关中4种状态
+  待确认：WebSocket实时数据接口、地图数据精度、告警阈值配置
+  原型版本：v1.1
+  ===================================
+-->
+</body>
+</html>
