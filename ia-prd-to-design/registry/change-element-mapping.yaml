@@ -1,0 +1,394 @@
+# change-element-mapping.yaml
+# 原子变化点 → 设计要素的聚合影响映射
+# element_id 必须为 element-type-registry.yaml 中已有的 id
+#
+# impact_level：
+#   certain     - 一定影响，必须执行
+#   likely      - 通常影响，默认执行（用户可跳过）
+#   conditional - 条件影响，根据 condition 判断或交由用户决定
+#
+# 映射来源：TDD 高阶 §6 映射表聚合到设计要素粒度
+
+change_element_mappings:
+
+  # ─── IA 类 ────────────────────────────────────
+  - change_id: "IA-01"
+    affects:
+      - element_id: "data-model"
+        impact_level: "certain"
+        reason: "新实体 → 新物理表/缓存/状态机"
+      - element_id: "api-contract"
+        impact_level: "certain"
+        reason: "新实体通常需 CRUD 接口"
+      - element_id: "backend-impl"
+        impact_level: "certain"
+        reason: "新 Entity/DTO/VO 类 + 业务逻辑"
+      - element_id: "config"
+        impact_level: "conditional"
+        condition: "若实体含枚举属性需数据字典"
+      - element_id: "frontend"
+        impact_level: "conditional"
+        condition: "若新实体有对应管理页面"
+
+  - change_id: "IA-02"
+    affects:
+      - element_id: "data-model"
+        impact_level: "certain"
+        reason: "字段增减直接影响表结构/缓存"
+      - element_id: "backend-impl"
+        impact_level: "likely"
+        reason: "Entity 类字段同步"
+      - element_id: "api-contract"
+        impact_level: "likely"
+        reason: "接口入参出参可能变"
+      - element_id: "config"
+        impact_level: "conditional"
+        condition: "若属性含枚举约束或缓存键变化"
+
+  - change_id: "IA-03"
+    affects:
+      - element_id: "data-model"
+        impact_level: "certain"
+        reason: "外键/关联表/索引变更"
+      - element_id: "backend-impl"
+        impact_level: "certain"
+        reason: "关联映射逻辑"
+      - element_id: "api-contract"
+        impact_level: "likely"
+        reason: "关联查询接口"
+
+  - change_id: "IA-04"
+    affects:
+      - element_id: "data-model"
+        impact_level: "certain"
+        reason: "状态机定义直接变更"
+      - element_id: "backend-impl"
+        impact_level: "certain"
+        reason: "状态流转逻辑 + 时序变化"
+
+  - change_id: "IA-05"
+    affects:
+      - element_id: "config"
+        impact_level: "certain"
+        reason: "字典键值映射直接变更"
+      - element_id: "data-model"
+        impact_level: "likely"
+        reason: "字段约束调整"
+      - element_id: "backend-impl"
+        impact_level: "likely"
+        reason: "枚举类定义"
+
+  # ─── FS 类 ────────────────────────────────────
+  - change_id: "FS-01"
+    affects:
+      - element_id: "api-contract"
+        impact_level: "certain"
+        reason: "新特性需新接口"
+      - element_id: "backend-impl"
+        impact_level: "certain"
+        reason: "新业务逻辑类"
+      - element_id: "frontend"
+        impact_level: "likely"
+        reason: "新特性通常对应新页面"
+      - element_id: "config"
+        impact_level: "likely"
+        reason: "新特性需权限配置"
+
+  - change_id: "FS-02"
+    affects:
+      - element_id: "backend-impl"
+        impact_level: "certain"
+        reason: "业务规则逻辑实现"
+      - element_id: "api-contract"
+        impact_level: "likely"
+        reason: "规则变化可能影响接口校验"
+      - element_id: "config"
+        impact_level: "conditional"
+        condition: "若规则阈值可配置化"
+
+  - change_id: "FS-03"
+    affects:
+      - element_id: "frontend"
+        impact_level: "certain"
+        reason: "交互流程直接变更"
+      - element_id: "api-contract"
+        impact_level: "likely"
+        reason: "操作触发的后端接口"
+      - element_id: "backend-impl"
+        impact_level: "likely"
+        reason: "操作逻辑实现"
+
+  - change_id: "FS-04"
+    affects:
+      - element_id: "backend-impl"
+        impact_level: "certain"
+        reason: "导出方案直接变更"
+      - element_id: "api-contract"
+        impact_level: "certain"
+        reason: "导出接口定义"
+      - element_id: "integration"
+        impact_level: "conditional"
+        condition: "若异步导出需通知下发"
+
+  - change_id: "FS-05"
+    affects:
+      - element_id: "backend-impl"
+        impact_level: "certain"
+        reason: "定时任务/自动逻辑"
+      - element_id: "config"
+        impact_level: "likely"
+        reason: "任务配置项"
+      - element_id: "integration"
+        impact_level: "conditional"
+        condition: "若任务涉及异步消息"
+
+  - change_id: "FS-06"
+    affects:
+      - element_id: "integration"
+        impact_level: "certain"
+        reason: "通知渠道与文案直接变更"
+      - element_id: "config"
+        impact_level: "conditional"
+        condition: "若通知频控可配置"
+
+  # ─── UP 类 ────────────────────────────────────
+  - change_id: "UP-01"
+    affects:
+      - element_id: "frontend"
+        impact_level: "certain"
+        reason: "页面清单/组件/交互直接变更"
+      - element_id: "api-contract"
+        impact_level: "likely"
+        reason: "页面对应后端接口"
+      - element_id: "config"
+        impact_level: "likely"
+        reason: "页面菜单权限"
+
+  - change_id: "UP-02"
+    affects:
+      - element_id: "frontend"
+        impact_level: "certain"
+        reason: "布局结构变更"
+      - element_id: "api-contract"
+        impact_level: "conditional"
+        condition: "若字段增减影响接口参数"
+
+  - change_id: "UP-03"
+    affects:
+      - element_id: "frontend"
+        impact_level: "certain"
+        reason: "交互流程直接变更"
+
+  - change_id: "UP-04"
+    affects:
+      - element_id: "frontend"
+        impact_level: "certain"
+        reason: "菜单路由配置"
+      - element_id: "config"
+        impact_level: "certain"
+        reason: "菜单可见性权限"
+
+  - change_id: "UP-05"
+    affects:
+      - element_id: "frontend"
+        impact_level: "certain"
+        reason: "兼容性设计变更"
+
+  # ─── PD 类 ────────────────────────────────────
+  - change_id: "PD-01"
+    affects:
+      - element_id: "config"
+        impact_level: "certain"
+        reason: "角色清单/权限矩阵直接变更"
+      - element_id: "backend-impl"
+        impact_level: "conditional"
+        condition: "若涉及数据权限逻辑实现"
+
+  - change_id: "PD-02"
+    affects:
+      - element_id: "config"
+        impact_level: "certain"
+        reason: "功能权限矩阵直接变更"
+      - element_id: "api-contract"
+        impact_level: "likely"
+        reason: "接口鉴权注解"
+      - element_id: "frontend"
+        impact_level: "likely"
+        reason: "菜单/按钮可见性"
+
+  - change_id: "PD-03"
+    affects:
+      - element_id: "config"
+        impact_level: "certain"
+        reason: "数据权限矩阵直接变更"
+      - element_id: "backend-impl"
+        impact_level: "likely"
+        reason: "数据权限过滤逻辑"
+
+  # ─── ID 类 ────────────────────────────────────
+  - change_id: "ID-01"
+    affects:
+      - element_id: "integration"
+        impact_level: "certain"
+        reason: "外部服务依赖清单直接变更"
+      - element_id: "architecture"
+        impact_level: "likely"
+        reason: "系统边界调整"
+      - element_id: "backend-impl"
+        impact_level: "likely"
+        reason: "新增外部调用链路时序"
+
+  - change_id: "ID-02"
+    affects:
+      - element_id: "integration"
+        impact_level: "certain"
+        reason: "集成方式调整"
+      - element_id: "backend-impl"
+        impact_level: "conditional"
+        condition: "若涉及跨系统一致性"
+
+  - change_id: "ID-03"
+    affects:
+      - element_id: "integration"
+        impact_level: "certain"
+        reason: "接口契约变更"
+      - element_id: "api-contract"
+        impact_level: "conditional"
+        condition: "若内部适配接口需同步调整"
+
+  # ─── SS 类 ────────────────────────────────────
+  - change_id: "SS-01"
+    affects:
+      - element_id: "backend-impl"
+        impact_level: "certain"
+        reason: "时序图/场景逻辑直接变更"
+      - element_id: "integration"
+        impact_level: "conditional"
+        condition: "若场景含异步触发事件"
+
+  - change_id: "SS-02"
+    affects:
+      - element_id: "api-contract"
+        impact_level: "certain"
+        reason: "错误码体系变更"
+      - element_id: "backend-impl"
+        impact_level: "certain"
+        reason: "异常分支时序"
+      - element_id: "integration"
+        impact_level: "conditional"
+        condition: "若涉及降级策略"
+
+  - change_id: "SS-03"
+    affects:
+      - element_id: "backend-impl"
+        impact_level: "certain"
+        reason: "审批流程定义直接变更"
+      - element_id: "integration"
+        impact_level: "likely"
+        reason: "审批通知"
+      - element_id: "config"
+        impact_level: "likely"
+        reason: "审批角色权限"
+
+  # ─── NF 类 ────────────────────────────────────
+  - change_id: "NF-01"
+    affects:
+      - element_id: "config"
+        impact_level: "certain"
+        reason: "性能指标直接变更"
+      - element_id: "data-model"
+        impact_level: "likely"
+        reason: "缓存策略调整"
+      - element_id: "architecture"
+        impact_level: "conditional"
+        condition: "若需引入新中间件"
+
+  - change_id: "NF-02"
+    affects:
+      - element_id: "config"
+        impact_level: "certain"
+        reason: "安全策略直接变更"
+      - element_id: "architecture"
+        impact_level: "conditional"
+        condition: "若需新增安全组件"
+
+  - change_id: "NF-03"
+    affects:
+      - element_id: "config"
+        impact_level: "certain"
+        reason: "可用性指标直接变更"
+      - element_id: "architecture"
+        impact_level: "conditional"
+        condition: "若 SLA 变更导致部署架构调整"
+
+  - change_id: "NF-04"
+    affects:
+      - element_id: "frontend"
+        impact_level: "likely"
+        reason: "页面布局/交互流程可能需要优化"
+
+  - change_id: "NF-05"
+    affects:
+      - element_id: "frontend"
+        impact_level: "certain"
+        reason: "埋点触发点与交互流程绑定"
+      - element_id: "api-contract"
+        impact_level: "conditional"
+        condition: "若埋点数据需上报后端"
+
+  # ─── AA 类 ────────────────────────────────────
+  - change_id: "AA-01"
+    affects:
+      - element_id: "architecture"
+        impact_level: "certain"
+        reason: "服务边界划分直接变更"
+      - element_id: "integration"
+        impact_level: "conditional"
+        condition: "若架构变更影响系统依赖"
+
+  - change_id: "AA-02"
+    affects:
+      - element_id: "architecture"
+        impact_level: "likely"
+        reason: "特性分类可能影响服务划分"
+      - element_id: "api-contract"
+        impact_level: "likely"
+        reason: "接口路径可能随特性编号调整"
+      - element_id: "config"
+        impact_level: "likely"
+        reason: "权限矩阵按特性清单组织"
+
+  # ─── CF 类 ────────────────────────────────────
+  - change_id: "CF-01"
+    affects:
+      - element_id: "config"
+        impact_level: "certain"
+        reason: "配置项清单直接变更"
+      - element_id: "backend-impl"
+        impact_level: "likely"
+        reason: "配置读取逻辑"
+      - element_id: "api-contract"
+        impact_level: "conditional"
+        condition: "若配置项需通过接口管理"
+      - element_id: "frontend"
+        impact_level: "conditional"
+        condition: "若需前端配置管理页面"
+
+  - change_id: "CF-02"
+    affects:
+      - element_id: "config"
+        impact_level: "certain"
+        reason: "IT 配置项清单直接变更"
+      - element_id: "architecture"
+        impact_level: "conditional"
+        condition: "若涉及部署级配置"
+
+  # ─── PP 类 ────────────────────────────────────
+  - change_id: "PP-01"
+    affects:
+      - element_id: "architecture"
+        impact_level: "conditional"
+        condition: "若范围扩大导致新增微服务"
+      - element_id: "config"
+        impact_level: "conditional"
+        condition: "若成功标准变化影响性能/安全目标"

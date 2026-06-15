@@ -1,0 +1,664 @@
+---
+standard_id: "design-data"
+name: "数据与存储（合并）"
+version: "1.0.0"
+---
+
+# design-data
+
+内建规范；域 **`data`**；子分段：`data-table`, `data-cache`, `data-state-machine`。
+每节含「规范条文」与「交付模板」（若该分段定义了模板章节）。
+
+## 分段：`data-table`
+
+
+**规范分段**：`data-table`
+
+### 规范条文
+
+# 数据表设计规范
+
+## 数据库技术选型
+
+- 数据库：PostgreSQL
+- 输出完整可执行 SQL
+
+---
+
+## 企业级命名规范（强制执行）⭐
+
+### 表名命名规范
+- **前缀**：`{项目代码}_`（如：`ars_`）
+- **后缀**：`_t`
+- **格式**：`{项目代码}_{业务实体}_t`
+- **示例**：
+  - ✅ `ars_tag_definition_t`
+  - ✅ `ars_person_basic_info_t`
+  - ❌ `tag_definition`（缺少前缀和后缀）
+  - ❌ `ars_tag_definition`（缺少后缀）
+
+### 字段命名规范
+- **布尔字段**：使用 `xxx_flag` 格式
+  - ✅ `deleted_flag`, `auto_sync_flag`, `has_level_flag`
+  - ❌ `is_deleted`, `is_auto_sync`, `has_level`（禁止 `is_xxx` 格式）
+- **布尔值**：`Y`（是）/ `N`（否）
+- **时间字段**：`xxx_time` 或 `xxx_date`
+- **状态字段**：`xxx_status` 或 `status`
+- **编码字段**：`xxx_code`
+
+### 主键ID规范（强制执行）⭐
+- **字段名**：`id`（所有表统一使用 `id`，不使用 `xxx_id`）
+- **字段类型**：`VARCHAR(64)`（禁止使用 INT/BIGINT 作为主键）
+- **约束名**：`pk_<table_name>_id`
+- **生成方式**：应用层ID生成器二方件生成唯一ID
+- **示例**：
+  ```sql
+  id VARCHAR(64) NOT NULL,
+  CONSTRAINT pk_ars_tag_definition_t_id PRIMARY KEY (id)
+  ```
+
+### 索引命名规范
+- **索引名**：`idx_<table_name>_<column_name>`
+- **组合索引**：`idx_<table_name>_<col1>_<col2>`
+
+---
+
+## 标准审计字段（必备公共字段）
+
+所有表必须包含以下6个审计字段：
+
+```sql
+created_by       INT8          NOT NULL,
+creation_date    TIMESTAMP(6)  NOT NULL,
+deleted_flag     CHAR(1)       NOT NULL DEFAULT 'N',
+last_updated_by  INT8          NOT NULL,
+last_update_date TIMESTAMP(6)  NOT NULL,
+renter_id        VARCHAR(64)   NULL DEFAULT NULL
+```
+
+**审计字段说明**：
+| 字段名 | 类型 | 说明 |
+|--------|------|------|
+| `created_by` | INT8 | 创建人ID |
+| `creation_date` | TIMESTAMP(6) | 创建时间 |
+| `deleted_flag` | CHAR(1) | 删除标识（'N'-未删除 / 'Y'-已删除） |
+| `last_updated_by` | INT8 | 最后更新人ID |
+| `last_update_date` | TIMESTAMP(6) | 最后更新时间 |
+| `renter_id` | VARCHAR(64) | 租户ID（多租户场景） |
+
+---
+
+## 数据库设计核心原则（强制执行）⭐
+
+### 原则1：不使用外键约束
+- ❌ 禁止使用 `FOREIGN KEY` 约束
+- ✅ 使用逻辑关联，在注释中说明关联关系
+- ✅ 在应用层保证数据一致性
+
+### 原则2：必填项最小原则
+
+**默认必填字段**：
+- 主键 `id`
+- 逻辑外键 ID（如 `user_id`, `tag_id`, `order_id`)
+- 审计字段：`created_by`, `creation_date`, `deleted_flag`, `last_updated_by`, `last_update_date`
+
+**默认选填字段**：
+- 所有业务字段默认 `NULL`（选填）
+- 仅当 PRD 明确标注"必填"时才设为 `NOT NULL`
+
+**理由**：根据业务逻辑灵活控制字段是否赋值，避免数据库层面过度约束。
+
+### 原则3：枚举类型优先使用数字编码
+- ✅ 优先使用 `INT4` + `DEFAULT` 值
+- ✅ 示例：`tag_type INT4 DEFAULT 1 -- 标签使用场景(1=资源调度, 2=其他场景)`
+- ❌ 仅当枚举值频繁变化或字符编码更易理解时才使用 `VARCHAR`
+
+---
+
+## 字段类型选择
+
+| 场景 | 推荐类型 |
+|------|---------|
+| 主键 | VARCHAR(64) |
+| 逻辑外键 | VARCHAR(64) 或根据来源系统确定 |
+| 状态枚举 | INT4，注释说明每个值含义 |
+| 金额 | DECIMAL(18,2) |
+| 短文本（<=255） | VARCHAR |
+| 长文本 | TEXT，避免在 WHERE 中使用 |
+| 时间 | TIMESTAMP(6) |
+| 布尔 | CHAR(1)，'Y'/'N' |
+| JSON 结构 | JSON 类型 |
+| 人员ID | INT8（HR系统标准） |
+
+---
+
+## 索引设计原则
+
+- **主键索引**：自动创建，无需手动添加
+- **关联ID字段**：必须创建索引（如 `ref_id`、`order_id`）
+- **查询频繁字段**：选择性添加索引（如查询条件、排序字段）
+- **组合索引**：多个字段联合查询时考虑组合索引
+- 避免在低基数字段（如 `deleted_flag`、`status`）上单独建索引
+- 联合索引遵循最左前缀原则，将区分度高的字段放前面
+- 单表索引数量不超过 5 个
+
+---
+
+## 范式与反范式
+
+- 核心业务表满足 3NF
+- 允许对高频查询场景做适度冗余（需在字段说明中注明冗余来源）
+- 大字段（TEXT/BLOB/JSON）拆分到子表，避免影响主表查询性能
+
+---
+
+## 逻辑删除
+
+- 统一使用 `deleted_flag` 字段，禁止物理删除业务数据
+- 逻辑删除值：'Y'（已删除）/ 'N'（未删除）
+- 逻辑删除时同步更新 `last_update_date`
+- 查询时统一附加 `WHERE deleted_flag = 'N'`
+
+---
+
+## 注释规范
+
+- 每个表必须有 `COMMENT ON TABLE`
+- 每个字段必须有 `COMMENT ON COLUMN`
+- 注释内容清晰准确，说明字段用途
+- 枚举值在注释中说明（格式：值1-说明 / 值2-说明）
+- 逻辑关联关系在注释中说明（如：逻辑关联 yyy_table.id）
+
+---
+
+## 常见设计模式
+
+### 主表设计
+主表存储核心业务数据，包含完整审计字段。
+
+### 关联表设计
+关联表存储实体间的关联关系，包含：
+- 双方实体ID（逻辑关联）
+- 关联类型（如适用）
+- 完整审计字段
+
+### 配置表设计
+配置表存储系统配置数据，包含：
+- 配置项编码（唯一标识）
+- 配置项名称
+- 配置项值
+- 配置项类型
+- 完整审计字段
+
+---
+
+## ER 图规范
+
+- 使用 Mermaid `erDiagram` 语法
+- 标注关系类型：`||--o{`（一对多）、`}|--|{`（多对多）
+- 仅画核心实体，辅助表（日志、配置）不纳入 ER 图
+
+---
+
+## 项目规范摘录（`规范/` 目录 · IT 设计文档 §4.3）
+
+> 来源：`{WORKSPACE_ROOT}/规范/examples/it_design_doc.md` 中「数据库及文件持久化设计」相关约束。与上文冲突时以 `docs/extend-rule/` 覆盖规范为准。
+
+- **表结构设计**：说明核心表是新建还是沿用既有模式；说明与现有核心表的关系（文字或关系图）。
+- **字段说明**：标出与项目通用字段（如 `creation_date`、`last_update_date` 等）对齐的字段；枚举与约束须写明出处或规范。
+- **存量表结构修改**（若涉及）：必须列出「修改表 / 修改字段 / 修改原因 / 影响评估（含迁移与兼容）」。
+- **文件存储**（若涉及）：目录与命名须说明是否遵循项目既有存储与权限模式。
+
+### 交付模板
+
+# 数据表设计
+
+<!--
+变更标注约定（增量模式使用，全量模式所有内容均为新增可省略标注）：
+- ✨ 新增：本次新增的表或字段
+- 🔧 修改：在现有基础上有变更（字段类型/约束/索引等）
+-->
+
+## 变更概要
+
+| 动作 | 对象 | 说明 |
+|------|------|------|
+| ✨ 新增 | | |
+| 🔧 修改 | | |
+
+---
+
+## 表清单
+
+> **与 PRD 实体对齐**：每张表须在「对应 PRD 实体」列标注其设计依据来自 PRD **「四、信息架构 → 4.1 业务对象/逻辑实体」** 表格中的**实体编号**（如 `E001`）。该表字段含「实体编号、实体名称、实体说明、对应业务对象、主键」等；设计时以实体编号为稳定锚点。  
+> - 一表主要承载**一个**逻辑实体：填单个编号，如 `E003`。  
+> - 关联表 / 拆分表同时落多个实体属性：填多个编号，中文顿号分隔，如 `E001、E005`。  
+> - PRD 未列实体、纯技术表（如流水、配置扩展）：填 `—`，并在「说明」中简要注明依据（章节或需求点）。
+
+| 序号 | 表名 | 中文名 | 对应 PRD 实体 | 所属模块 | 动作 | 说明 |
+|------|------|--------|---------------|---------|------|------|
+| 1 | | | E001 | | ✨/🔧 | |
+
+---
+
+## 实体关系图
+
+```mermaid
+erDiagram
+```
+
+---
+
+## 表详细设计
+
+### ✨/🔧 {表名}
+
+> 🔧 **变更说明**：{仅修改时填写，说明变更点及原因，新增时删除此行}
+
+**说明**：{表的业务用途}
+
+#### 字段设计
+
+| 字段名 | 类型 | 长度 | 非空 | 默认值 | 索引 | 动作 | 说明 |
+|--------|------|------|------|--------|------|------|------|
+| id | VARCHAR | 64 | Y | | PK | 🔧 | 主键ID（应用层生成UUID或雪花ID）|
+| {业务字段} | {类型} | {长度} | Y/N | {默认值} | | ✨/🔧 | {字段说明} |
+| created_by | INT8 | | Y | | | 🔧 | 创建人ID（审计字段）|
+| creation_date | TIMESTAMP(6) | | Y | | | 🔧 | 创建时间（审计字段）|
+| deleted_flag | CHAR | 1 | Y | 'N' | | 🔧 | 删除标识：N-未删除 / Y-已删除（审计字段）|
+| last_updated_by | INT8 | | Y | | | 🔧 | 最后更新人ID（审计字段）|
+| last_update_date | TIMESTAMP(6) | | Y | | | 🔧 | 最后更新时间（审计字段）|
+| renter_id | VARCHAR | 64 | N | NULL | | 🔧 | 租户ID（审计字段）|
+
+**字段设计原则说明**：
+- 主键 `id` 和 审计 字段为必填字段
+- 业务字段默认选填（`NULL`），仅当 PRD 明确标注"必填"时设为 `NOT NULL`
+- 逻辑外键字段（如 `user_id`, `order_id`）为必填，使用 `VARCHAR(64)` 类型
+- 状态枚举字段使用 `INT4` 类型，注释说明枚举值含义
+
+#### 索引设计
+
+| 索引名 | 类型 | 字段 | 动作 | 说明 |
+|--------|------|------|------|------|
+| PRIMARY | 主键 | id | 🔧 | 主键索引（自动创建）|
+| uk_{表名}_{字段} | 唯一 | | ✨ | {唯一约束说明} |
+| idx_{表名}_{字段} | 普通 | | ✨ | {索引用途说明} |
+
+**索引设计原则说明**：
+- 关联ID字段（如 `ref_id`, `order_id`）必须创建索引
+- 查询频繁字段选择性添加索引
+- 组合索引遵循最左前缀原则
+- 单表索引数量不超过 5 个
+
+#### 约束与说明
+
+**字段约束**：
+- {列出字段级约束，如唯一约束、长度约束、格式约束}
+
+**枚举值定义**：
+- `{字段名}`：{枚举值说明（格式：值1-说明 / 值2-说明）}
+
+**业务规则**：
+- {列出表级业务规则，如数据唯一性、状态流转、数据权限等}
+
+**逻辑关联关系**：
+- `{字段名}` 逻辑关联 `{关联表}.{关联字段}`（应用层维护一致性）
+
+---
+
+## 参考 DDL 样例（`规范/references/database-schema-template.sql`）
+
+> 以下为工作区 `规范/references/` 中的 **模板样例**，仅作字段注释、主键/唯一键与审计类字段书写风格参考；实际表结构以本需求与默认数据表规范为准。
+
+```sql
+CREATE TABLE IF NOT EXISTS xxx_table (
+    id               VARCHAR(64)   NOT NULL,
+    ref_id           VARCHAR(64)   NOT NULL,   -- 逻辑关联 yyy_table.id，应用层维护
+    field_name       VARCHAR(255)  NULL,       -- 业务字段默认选填
+    status           INT4          DEFAULT 1,  -- 状态：1-草稿 / 2-启用 / 3-停用（数字编码）
+    amount           DECIMAL(18,2) NULL,       -- 金额字段
+    -- 审计字段
+    created_by       INT8          NOT NULL,
+    creation_date    TIMESTAMP(6)  NOT NULL,
+    deleted_flag     CHAR(1)       NOT NULL DEFAULT 'N',
+    last_updated_by  INT8          NOT NULL,
+    last_update_date TIMESTAMP(6)  NOT NULL,
+    renter_id        VARCHAR(64)   NULL DEFAULT NULL,
+    CONSTRAINT pk_xxx_table_id PRIMARY KEY (id)
+);
+
+COMMENT ON TABLE  xxx_table                  IS 'XXXX表';
+COMMENT ON COLUMN xxx_table.id               IS '主键ID';
+COMMENT ON COLUMN xxx_table.ref_id           IS '关联ID，逻辑关联 yyy_table.id';
+COMMENT ON COLUMN xxx_table.field_name       IS '字段说明';
+COMMENT ON COLUMN xxx_table.status           IS '状态：1-草稿 / 2-启用 / 3-停用';
+COMMENT ON COLUMN xxx_table.amount           IS '金额（单位：元）';
+COMMENT ON COLUMN xxx_table.created_by       IS '创建人ID';
+COMMENT ON COLUMN xxx_table.creation_date    IS '创建时间';
+COMMENT ON COLUMN xxx_table.deleted_flag     IS '删除标识：N-未删除 / Y-已删除';
+COMMENT ON COLUMN xxx_table.last_updated_by  IS '最后更新人ID';
+COMMENT ON COLUMN xxx_table.last_update_date IS '最后更新时间';
+COMMENT ON COLUMN xxx_table.renter_id        IS '租户ID';
+
+CREATE INDEX idx_xxx_table_ref_id    ON xxx_table(ref_id);
+CREATE INDEX idx_xxx_table_status    ON xxx_table(status);
+```
+
+## 分段：`data-cache`
+
+
+**规范分段**：`data-cache`
+
+### 规范条文
+
+# 缓存与实体流转设计规范（TDD 第2章 §2.2 / §2.3）
+
+## 2.2 缓存设计规范
+
+### Key 命名规范
+
+1. 结构 (Structure)
+Redis Key 由以下 5 个部分按顺序组成：
+
+租户序号后9位：用于标识具体的租户（Tenant）。
+模块缩写：标识业务所属的模块。
+缓存对象缩写：标识具体的业务数据对象。
+缓存子对象缩写（可选）：标识更细分的数据对象。
+开发环境：标识当前运行的环境（如开发、测试、生产）。
+2. 示例 (Example)
+888888888 + :iaone + :com + :kri + :alpha
+
+888888888：租户 ID 的后 9 位。
+:iaone：模块缩写（例如：IAONE 模块）。
+:com：缓存对象缩写（例如：Company 公司对象）。
+:kri：缓存子对象缩写（例如：KRI 指标对象）。
+:alpha：开发环境标识（例如：Alpha 测试环境）。
+
+### 数据结构选型
+
+| 场景 | 数据结构 | 说明 |
+|------|---------|------|
+| 单对象缓存 | String（JSON 序列化） | 简单，但无法部分更新 |
+| 对象字段独立读写 | Hash | 可 HGET 单字段，减少序列化开销 |
+| 有序集合 | ZSet | 排行榜、延迟队列 |
+| 标记/集合去重 | Set | 用户已读消息、IP 黑名单 |
+| 计数器 | String + INCR | 原子递增 |
+
+### TTL 策略
+
+- 热点数据 TTL 加随机抖动（±10%），避免缓存雪崩
+- 空值缓存设置短 TTL（60s），避免缓存穿透
+- 用户会话类数据：滑动 TTL（每次访问刷新）
+- 配置/字典类数据：长 TTL（1~24 小时）+ 主动失效
+
+### 一致性策略
+
+| 模式 | 写顺序 | 适用场景 |
+|------|--------|---------|
+| Cache-Aside（旁路缓存） | 先写 DB，再删 Cache | 读多写少，强一致要求低 |
+| Write-Through | 同步写 DB 和 Cache | 写频繁，不能接受缓存脏读 |
+| 延迟双删 | 先删 Cache，写 DB，延迟再删 | 解决并发脏读问题 |
+
+### 防穿透/击穿/雪崩
+
+| 问题 | 方案 |
+|------|------|
+| 缓存穿透 | 空值缓存（60s TTL） + 布隆过滤器 |
+| 缓存击穿 | 互斥锁（Redis SETNX）+ 逻辑过期 |
+| 缓存雪崩 | TTL 随机抖动 + 多级缓存（本地 + Redis） |
+
+---
+
+## 2.3 实体流转关系规范
+
+### 状态机设计原则
+
+- 每个有状态实体必须有明确的状态枚举（存储为整数，注释说明含义）
+- 状态转移必须通过方法调用触发，禁止直接修改 status 字段
+- 每次状态变更记录时间戳和操作人（审计字段）
+- 非法状态转移必须抛出业务异常，携带错误码
+
+### 状态枚举命名
+
+```java
+public enum OrderStatus {
+    PENDING(0, "待审批"),
+    APPROVED(1, "已通过"),
+    REJECTED(2, "已驳回"),
+    CANCELLED(3, "已撤销");
+}
+```
+
+- 枚举值存数据库使用 `int`，不存字符串（节省空间，字典翻译见 config/dict-error.md）
+- 枚举类放 domain 包，不放 common/constant 包
+
+### 状态转移流转图（Mermaid）
+
+```
+stateDiagram-v2
+    [*] --> PENDING : 创建
+    PENDING --> APPROVED : 审批通过 [approver != null]
+    PENDING --> REJECTED : 审批驳回
+    PENDING --> CANCELLED : 用户撤销
+    APPROVED --> CANCELLED : 审批后撤销 [未执行]
+```
+
+### 触发事件约定
+
+- 状态变更后必须发布领域事件（`OrderStatusChangedEvent`）
+- 事件包含：entityId、fromStatus、toStatus、operator、timestamp
+- 监听方（通知、日志、统计）订阅事件，不耦合到状态机核心逻辑
+
+### 交付模板
+
+# 缓存与实体流转设计（TDD 第2章 §2.2 / §2.3）
+
+<!--
+变更标注约定：
+- ✨ 新增：本次新增的缓存 Key 或状态机
+- 🔧 修改：在现有基础上有变更
+- ⏭️ 跳过：PRD 无对应需求，本次不输出
+-->
+
+## 变更概要
+
+| 要素 | 动作 | 对象 | 说明 |
+|------|------|------|------|
+| 2.2 缓存 | ✨/🔧 | | |
+| 2.3 状态机 | ✨/🔧 | | |
+
+---
+
+## 2.2 缓存设计
+
+> ⏭️ **跳过说明**：{若 PRD 无缓存诉求，填写原因，删除以下内容}
+
+### 缓存 Key 清单
+
+| Key 模式 | 数据结构 | TTL | 动作 | 说明 |
+|---------|---------|-----|------|------|
+| `biz:{资源}:{id}` | String | {N}min | ✨/🔧 | |
+
+### ✨/🔧 {Key 名称} — {业务用途}
+
+> 🔧 **变更说明**：{仅修改时填写}
+
+| 属性 | 值 |
+|------|---|
+| Key 模式 | `biz:{资源}:{id}` |
+| 数据结构 | String / Hash / Set / ZSet |
+| TTL | {N} 分钟 / 小时，{滑动/固定} |
+| 序列化 | JSON（Jackson） |
+| 一致性策略 | Cache-Aside（先写 DB，再删 Cache） |
+| 空值缓存 | 是（TTL = 60s），防穿透 |
+| 雪崩防护 | TTL 随机抖动 ±{N}% |
+
+**缓存数据结构**（Hash 类型时填写）：
+
+| Field | 类型 | 说明 |
+|-------|------|------|
+| | | |
+
+**失效触发点**（主动删除的时机）：
+
+| 触发操作 | 失效 Key | 说明 |
+|---------|---------|------|
+| {写操作/状态变更} | `biz:{资源}:{id}` | |
+
+---
+
+## 2.3 实体流转关系（状态机）
+
+> ⏭️ **跳过说明**：{若实体无状态流转需求，填写原因，删除以下内容}
+
+### 状态机清单
+
+| 实体 | 状态字段 | 状态数 | 动作 | 说明 |
+|------|---------|--------|------|------|
+| | | | ✨/🔧 | |
+
+### ✨/🔧 {实体名} 状态机
+
+> 🔧 **变更说明**：{仅修改时填写，说明新增了哪些状态/转移，及原因}
+
+**状态枚举**：
+
+| 枚举值（int） | 枚举名 | 中文含义 | 说明 |
+|------------|--------|---------|------|
+| 0 | PENDING | 待处理 | 初始状态 |
+
+**状态转移图**：
+
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING : 创建
+    PENDING --> NEXT_STATE : 触发事件 [前置条件]
+```
+
+**状态转移规则**：
+
+| 起始状态 | 目标状态 | 触发事件 | 前置条件 | 后置事件 | 处理方法 |
+|---------|---------|---------|---------|---------|---------|
+| PENDING | | | | | `{ServiceImpl}.{method}()` |
+
+**后置事件定义**：
+
+| 事件类名 | 触发状态 | 事件字段 | 说明 |
+|---------|---------|---------|------|
+| `{Entity}StatusChangedEvent` | | entityId, fromStatus, toStatus, operator | |
+
+**对应数据库字段**：
+- 表：`{table_name}`（见 data/data-table.md）
+- 字段：`status`（TINYINT，字典翻译见 config/dict-error.md §{字典分类}）
+
+## 分段：`data-state-machine`
+
+
+**规范分段**：`data-state-machine`
+
+### 规范条文
+
+# 实体流转关系规范（TDD 第2章 §2.3）
+
+## 2.3 实体流转关系规范
+
+### 状态机设计原则
+
+- 每个有状态实体必须有明确的状态枚举（存储为整数，注释说明含义）
+- 状态转移必须通过方法调用触发，禁止直接修改 status 字段
+- 每次状态变更记录时间戳和操作人（审计字段）
+- 非法状态转移必须抛出业务异常，携带错误码
+
+### 状态枚举命名
+
+```java
+public enum OrderStatus {
+    PENDING(0, "待审批"),
+    APPROVED(1, "已通过"),
+    REJECTED(2, "已驳回"),
+    CANCELLED(3, "已撤销");
+}
+```
+
+- 枚举值存数据库使用 `int`，不存字符串（节省空间，字典翻译见 config/dict.md）
+- 枚举类放 domain 包，不放 common/constant 包
+
+### 状态转移流转图（Mermaid）
+
+```
+stateDiagram-v2
+    [*] --> PENDING : 创建
+    PENDING --> APPROVED : 审批通过 [approver != null]
+    PENDING --> REJECTED : 审批驳回
+    PENDING --> CANCELLED : 用户撤销
+    APPROVED --> CANCELLED : 审批后撤销 [未执行]
+```
+
+### 触发事件约定
+
+- 状态变更后必须发布领域事件（`OrderStatusChangedEvent`）
+- 事件包含：entityId、fromStatus、toStatus、operator、timestamp
+- 监听方（通知、日志、统计）订阅事件，不耦合到状态机核心逻辑
+
+### 交付模板
+
+# 实体流转关系设计（TDD 第2章 §2.3）
+
+<!--
+变更标注约定：
+- ✨ 新增：本次新增的状态机
+- 🔧 修改：在现有基础上变更（新增状态/转移）
+- ⏭️ 跳过：PRD 无对应需求，本次不输出
+-->
+
+## 变更概要
+
+| 动作 | 对象 | 说明 |
+|------|------|------|
+| ✨/🔧 | | |
+
+---
+
+## 2.3 实体流转关系（状态机）
+
+> ⏭️ **跳过说明**：{若实体无状态流转需求，填写原因，删除以下内容}
+
+### 状态机清单
+
+| 实体 | 状态字段 | 状态数 | 动作 | 说明 |
+|------|---------|--------|------|------|
+| | | | ✨/🔧 | |
+
+### ✨/🔧 {实体名} 状态机
+
+> 🔧 **变更说明**：{仅修改时填写，说明新增了哪些状态/转移，及原因}
+
+**状态枚举**：
+
+| 枚举值（int） | 枚举名 | 中文含义 | 说明 |
+|------------|--------|---------|------|
+| 0 | PENDING | 待处理 | 初始状态 |
+
+**状态转移图**：
+
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING : 创建
+    PENDING --> NEXT_STATE : 触发事件 [前置条件]
+```
+
+**状态转移规则**：
+
+| 起始状态 | 目标状态 | 触发事件 | 前置条件 | 后置事件 | 处理方法 |
+|---------|---------|---------|---------|---------|---------|
+| PENDING | | | | | `{ServiceImpl}.{method}()` |
+
+**后置事件定义**：
+
+| 事件类名 | 触发状态 | 事件字段 | 说明 |
+|---------|---------|---------|------|
+| `{Entity}StatusChangedEvent` | | entityId, fromStatus, toStatus, operator | |
+
+**对应数据库字段**：
+- 表：`{table_name}`（见 data/data-table.md）
+- 字段：`status`（TINYINT，字典翻译见 config/dict.md §{字典分类}）

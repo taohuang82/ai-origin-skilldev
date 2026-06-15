@@ -1,0 +1,81 @@
+workflows:
+  - id: "design-resume"
+    name: "设计续接恢复"
+    priority: 100
+    input_signature:
+      required:
+        - id: "DESIGN_DOC_INPROGRESS"
+          reason: "存在未完成的设计主产物（design 域）。"
+      excluded: []
+      optional:
+        - id: "PRD_DOC_ANY"
+          reason: "可选：prd.md 仅作需求侧参考，辅助续写设计。"
+    trigger_keywords: ["继续设计", "resume", "从上次继续", "接着写设计", "断点续作", "接着做"]
+    orchestration_file: "orchestration/o-design-resume.md"
+    resume_mode: true
+    element_sequence: []
+    status: "active"
+
+  - id: "design-review-modify"
+    name: "设计评审修改"
+    priority: 80
+    input_signature:
+      required:
+        - id: "DESIGN_HISTORICAL"
+          reason: "修改对象是已完成态的设计基线（design.md）。"
+        - id: "REVIEW_COMMENTS"
+          reason: "必须有评审意见（文字描述或带标注文档均可，o-design-review-modify 内部区分）。"
+      excluded:
+        - id: "DESIGN_DOC_INPROGRESS"
+          reason: "存在进行中设计时优先走续接恢复。"
+      optional:
+        - id: "PRD_DOC_ANY"
+          reason: "可选：PRD 仅作需求对照参考。"
+    trigger_keywords: ["评审修改设计", "根据评审意见", "按意见改设计", "修改设计文档", "按意见改", "有评审标注", "改 backend-api", "改设计文档"]
+    orchestration_file: "orchestration/o-design-review-modify.md"
+    element_sequence: []
+    status: "active"
+
+  - id: "design-incremental-build"
+    name: "设计增量/更新"
+    priority: 60
+    input_signature:
+      required:
+        - id: "DESIGN_HISTORICAL"
+          reason: "必须有已完成设计基线（design.md 等）；增量更新以设计域历史交付为锚。"
+      excluded:
+        - id: "DESIGN_DOC_INPROGRESS"
+          reason: "进行中则走续接恢复。"
+        - id: "REVIEW_COMMENTS"
+          reason: "存在评审意见时属于 design-review-modify 场景。"
+      optional:
+        - id: "PRD_DOC_ANY"
+          reason: "推荐：prd.md 承载需求变更事实，供 ChangeRouter 对齐；PRD 为输入参考，非本阶段主交付。"
+        - id: "PRD_DOC_COMPLETED"
+          reason: "已定稿 PRD 可降低澄清成本。"
+        - id: "INCR_PRD_DOC"
+          reason: "含 DELTA / impact 元数据的 PRD 可加速变化点识别。"
+    trigger_keywords: ["增量设计", "设计增量", "优化设计", "1-n", "在现有设计基础上", "update 设计", "DELTA", "影响域", "ChangeRouter", "PC-", "原子变化点"]
+    orchestration_file: "orchestration/o-design-incremental-build.md"
+    element_sequence: []
+    status: "active"
+
+  - id: "design-new-build"
+    name: "从 PRD 新建完整技术设计"
+    priority: 40
+    input_signature:
+      required:
+        - id: "PRD_DOC_COMPLETED"
+          reason: "首版技术设计需以已定稿 PRD 为输入依据；产出为 design 域文件（design.md 等）。"
+      excluded:
+        - id: "DESIGN_HISTORICAL"
+          reason: "若已有完成态设计基线，优先走设计增量/更新。"
+        - id: "DESIGN_DOC_INPROGRESS"
+          reason: "存在进行中设计时优先走续接恢复。"
+        - id: "REVIEW_COMMENTS"
+          reason: "存在评审意见时属于 design-review-modify 场景。"
+      optional: []
+    trigger_keywords: ["PRD转设计", "生成技术方案", "新建设计", "ia-prd-to-design-new", "产品方案转设计", "需求转设计", "创建设计", "全量设计", "完整设计"]
+    orchestration_file: "orchestration/o-design-new-build.md"
+    element_sequence: []
+    status: "active"

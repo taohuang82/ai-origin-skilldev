@@ -1,0 +1,60 @@
+# standards-registry.yaml
+# 职责：登记本 Skill 可用规范；element-runner Phase 3 按 spec 表格中的 standard_id 加载。
+# file 路径相对于 ia-prd-to-design-new 根目录。
+# 约定：与 spec/m-design-*.md 同粒度合并，避免一个设计域多个并列 standard 文件。
+
+standards:
+  - id: "app-arch"
+    name: "应用架构图规范"
+    type: "builtin"
+    file: "../ia-fe-to-prd/standards/app-arch-standard.md"
+    description: "Mermaid 架构图与分层节点命名（extend 引用的共享规范文件）。"
+
+  - id: "er-diagram"
+    name: "ER 图规范"
+    type: "builtin"
+    file: "../ia-fe-to-prd/standards/er-diagram-standard.md"
+    description: "erDiagram 语法与关联约束（extend 引用的共享规范文件）。"
+
+  - id: "design-architecture"
+    name: "顶层架构（合并）"
+    type: "builtin"
+    file: "standards/design-architecture-standard.md"
+    description: "技术栈、分层、部署、微服务、特性开关；与 m-design-architecture 对齐。"
+
+  - id: "design-data"
+    name: "数据与存储（合并）"
+    type: "builtin"
+    file: "standards/design-data-standard.md"
+    description: "物理表、缓存、状态机；与 m-design-data 对齐。"
+
+  - id: "design-api-contract"
+    name: "后端接口契约（合并）"
+    type: "builtin"
+    file: "standards/design-api-contract-standard.md"
+    description: "REST、错误码、权限（契约侧）；与 m-design-api 对齐。"
+
+  - id: "design-backend"
+    name: "后端实现（合并）"
+    type: "builtin"
+    file: "standards/design-backend-standard.md"
+    description: "分层、类设计、时序、横切模式、外部韧性；与 m-design-backend 对齐。"
+
+  - id: "design-integration"
+    name: "集成与异步（合并）"
+    type: "builtin"
+    file: "standards/design-integration-standard.md"
+    description: "MQ、外部依赖、通知；与 m-design-integration 对齐。"
+
+  - id: "design-config"
+    name: "配置与安全（合并）"
+    type: "builtin"
+    file: "standards/design-config-standard.md"
+    description: "配置分层、Lookup、字典编码、权限矩阵、错误码、DFX；与 m-design-config 对齐。"
+
+  - id: "design-frontend"
+    name: "前端方案（合并）"
+    type: "builtin"
+    file: "standards/design-frontend-standard.md"
+    description: "组件拆分、路由与交互；与 m-design-frontend 对齐。"
+
