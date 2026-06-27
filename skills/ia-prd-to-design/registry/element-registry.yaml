@@ -1,0 +1,551 @@
+# 子要素注册表
+# 挂载于 config.yaml → extension_registry.elements
+
+# RESOLVE_ELEMENT(id):
+#   row := elements 中 id==id OR aliases 含 id
+#   IF composite_of 非空: RETURN 展开 composite_of
+#   ELSE: RETURN spec_path, standard_path
+#
+# prd_sources:
+#   required_sections: 子要素必须读取的 PRD 要素/小节（格式：element-id.L2.L2 中文名）
+#   optional_sections: 有则读取、缺失不阻断的 PRD 要素/小节（格式：element-id.L2.L2 中文名）
+#   extraction_keys: 从上述章节抽取的关键编号/业务信号
+
+elements:
+  - id: arch-tech-stack
+    domain: architecture
+    parent_element_id: architecture
+    order: 1
+    spec_path: spec/architecture/arch-tech-stack.md
+    standard_path: standards/architecture/arch-tech-stack.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/architecture.md"
+      heading: "## §1.1 技术选型"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["product-positioning.1.3 范围和边界", "app-architecture.2.2 系统边界", "nfr.10.5 可维护性"]
+      optional_sections: ["product-positioning.1.4 产品目标", "nfr.10.1 性能要求", "nfr.10.3 安全隐私", "integration-design.7.1 集成点"]
+      extraction_keys: ["范围边界", "系统边界", "技术约束", "性能要求", "安全隐私", "集成约束"]
+
+  - id: arch-deployment
+    domain: architecture
+    parent_element_id: architecture
+    order: 2
+    spec_path: spec/architecture/arch-deployment.md
+    standard_path: standards/architecture/arch-deployment.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/architecture.md"
+      heading: "## §1.2 部署架构"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["app-architecture.2.1 应用架构图", "app-architecture.2.2 系统边界", "nfr.10.1 性能要求"]
+      optional_sections: ["nfr.10.3 安全隐私", "nfr.10.5 可维护性", "integration-design.7.1 集成点"]
+      extraction_keys: ["架构节点", "系统边界", "部署约束", "容量要求", "可用性要求", "网络边界"]
+
+  - id: arch-microservice
+    domain: architecture
+    parent_element_id: architecture
+    order: 3
+    spec_path: spec/architecture/arch-microservice.md
+    standard_path: standards/architecture/arch-microservice.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/architecture.md"
+      heading: "## §1.3 微服务划分"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["app-architecture.2.1 应用架构图", "app-architecture.2.2 系统边界", "app-architecture.2.3 特性分类/特性/子特性"]
+      optional_sections: ["feature-spec.5.2 特性分类", "scenario-solution.9.2 解决方案集成图"]
+      extraction_keys: ["应用模块", "系统边界", "特性分类", "服务边界", "依赖关系"]
+    aliases: ['arch-service-topology']
+
+  - id: arch-feature-toggle
+    domain: architecture
+    parent_element_id: architecture
+    order: 4
+    spec_path: spec/architecture/arch-feature-toggle.md
+    standard_path: standards/architecture/arch-feature-toggle.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/architecture.md"
+      heading: "## §1.4 特性开关"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["feature-spec.5.3 子特性详细规格"]
+      optional_sections: ["feature-spec.5.1 子特性基本信息", "permission-design.6.1 角色定义", "permission-design.6.2 功能权限矩阵"]
+      extraction_keys: ["子特性", "启用条件", "灰度范围", "回滚要求", "角色范围"]
+
+  - id: arch-code-structure
+    domain: architecture
+    parent_element_id: architecture
+    order: 5
+    spec_path: spec/architecture/arch-code-structure.md
+    standard_path: standards/architecture/arch-code-structure.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/architecture.md"
+      heading: "## §1.5 代码结构"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["app-architecture.2.3 特性分类/特性/子特性", "feature-spec.5.3 子特性详细规格"]
+      optional_sections: ["app-architecture.2.1 应用架构图", "app-architecture.2.2 系统边界"]
+      extraction_keys: ["特性分类", "子特性", "功能模块", "工程边界", "复用约束"]
+
+  - id: arch-common-lib
+    domain: architecture
+    parent_element_id: architecture
+    order: 6
+    spec_path: spec/architecture/arch-common-lib.md
+    standard_path: standards/architecture/arch-common-lib.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/architecture.md"
+      heading: "## §1.6 公共库"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["feature-spec.5.3 子特性详细规格"]
+      optional_sections: ["app-architecture.2.3 特性分类/特性/子特性", "scenario-solution.9.3 场景详细描述"]
+      extraction_keys: ["通用能力", "复用点", "跨模块规则", "共享业务规则"]
+
+  - id: arch-common-component
+    domain: architecture
+    parent_element_id: architecture
+    order: 7
+    spec_path: spec/architecture/arch-common-component.md
+    standard_path: standards/architecture/arch-common-component.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/architecture.md"
+      heading: "## §1.7 公共组件"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["ui-prototype.3.1 页面清单", "ui-prototype.3.2 页面功能规格", "ui-prototype.3.6 交互原型"]
+      optional_sections: ["ui-prototype.3.4 Pageflow", "nfr.10.4 易用性"]
+      extraction_keys: ["页面", "组件", "复用场景", "交互模式", "易用性要求"]
+
+  - id: data-table
+    domain: data
+    parent_element_id: data-model
+    order: 1
+    spec_path: spec/data/data-table.md
+    standard_path: standards/data/data-table.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/data.md"
+      heading: "## §2.1 数据表设计"
+    execute_precheck: true
+    prd_sources:
+      required_sections: ["info-architecture.4.1 业务对象/逻辑实体", "info-architecture.4.2 实体关系图", "info-architecture.4.3 实体详情"]
+      optional_sections: ["info-architecture.4.5 数据样例", "feature-spec.5.3 子特性详细规格"]
+      extraction_keys: ["业务对象", "逻辑实体", "实体关系", "实体字段", "数据样例", "业务唯一性"]
+
+  - id: data-cache
+    domain: data
+    parent_element_id: data-model
+    order: 2
+    spec_path: spec/data/data-cache.md
+    standard_path: standards/data/data-cache.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/data.md"
+      heading: "## §2.2 缓存设计"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["feature-spec.5.3 子特性详细规格", "nfr.10.1 性能要求"]
+      optional_sections: ["info-architecture.4.3 实体详情", "scenario-solution.9.3 场景详细描述"]
+      extraction_keys: ["高频查询", "缓存对象", "缓存键", "失效策略", "一致性要求", "性能指标"]
+    aliases: ['cache-state']
+
+  - id: data-state-machine
+    domain: data
+    parent_element_id: data-model
+    order: 3
+    spec_path: spec/data/data-state-machine.md
+    standard_path: standards/data/data-state-machine.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/data.md"
+      heading: "## §2.3 状态机设计"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["info-architecture.4.4 实体状态流转", "feature-spec.5.3 子特性详细规格"]
+      optional_sections: ["scenario-solution.9.3 场景详细描述", "permission-design.6.2 功能权限矩阵"]
+      extraction_keys: ["实体状态", "流转条件", "触发动作", "终态", "角色权限"]
+
+  - id: be-api
+    domain: backend
+    parent_element_id: api-contract
+    order: 1
+    spec_path: spec/backend/be-api.md
+    standard_path: standards/backend/be-api.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/backend-api.md"
+      heading: "## §3.1 API 清单"
+    execute_precheck: true
+    prd_sources:
+      required_sections: ["feature-spec.5.1 子特性基本信息", "feature-spec.5.2 特性分类", "feature-spec.5.3 子特性详细规格"]
+      optional_sections: ["ui-prototype.3.2 页面功能规格", "integration-design.7.2 API", "permission-design.6.2 功能权限矩阵"]
+      extraction_keys: ["TC 编号", "FR 编号", "子特性", "接口动作", "请求字段", "响应字段", "权限点"]
+    aliases: ['api']
+
+  - id: be-class
+    domain: backend
+    parent_element_id: backend-impl
+    order: 1
+    spec_path: spec/backend/be-class.md
+    standard_path: standards/backend/be-class.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/backend.md"
+      heading: "## §3.2 类设计"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["feature-spec.5.3 子特性详细规格", "info-architecture.4.1 业务对象/逻辑实体", "info-architecture.4.3 实体详情"]
+      optional_sections: ["scenario-solution.9.3 场景详细描述", "permission-design.6.2 功能权限矩阵"]
+      extraction_keys: ["FR 编号", "业务动作", "逻辑实体", "服务职责", "校验规则", "权限点"]
+
+  - id: be-sequence
+    domain: backend
+    parent_element_id: backend-impl
+    order: 2
+    spec_path: spec/backend/be-sequence.md
+    standard_path: standards/backend/be-sequence.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/backend.md"
+      heading: "## §3.3 时序设计"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["scenario-solution.9.1 场景清单", "scenario-solution.9.3 场景详细描述", "feature-spec.5.3 子特性详细规格"]
+      optional_sections: ["ui-prototype.3.4 Pageflow", "integration-design.7.1 集成点", "permission-design.6.2 功能权限矩阵"]
+      extraction_keys: ["TC 编号", "FR 编号", "场景", "参与方", "触发动作", "异常分支"]
+
+  - id: be-logic
+    domain: backend
+    parent_element_id: backend-impl
+    order: 3
+    spec_path: null
+    standard_path: null
+    composite_of: ['be-class', 'be-sequence']
+    output:
+      file: "{DESIGN_DIR}/backend.md"
+      heading: "## §3.4 业务逻辑"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["feature-spec.5.3 子特性详细规格", "scenario-solution.9.3 场景详细描述"]
+      optional_sections: ["info-architecture.4.4 实体状态流转", "permission-design.6.2 功能权限矩阵"]
+      extraction_keys: ["FR 编号", "业务闭环", "规则条件", "处理结果", "状态流转"]
+
+  - id: be-transaction
+    domain: backend
+    parent_element_id: backend-impl
+    order: 4
+    spec_path: spec/backend/be-transaction.md
+    standard_path: standards/backend/be-transaction.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/backend.md"
+      heading: "## §3.5 事务设计"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["feature-spec.5.3 子特性详细规格", "info-architecture.4.3 实体详情"]
+      optional_sections: ["scenario-solution.9.3 场景详细描述", "integration-design.7.4 数据集成"]
+      extraction_keys: ["事务边界", "一致性要求", "回滚条件", "补偿动作", "数据集成"]
+
+  - id: be-export
+    domain: backend
+    parent_element_id: backend-impl
+    order: 5
+    spec_path: spec/backend/be-export.md
+    standard_path: standards/backend/be-export.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/backend.md"
+      heading: "## §3.6 导出设计"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["feature-spec.5.3 子特性详细规格", "info-architecture.4.3 实体详情"]
+      optional_sections: ["ui-prototype.3.2 页面功能规格", "permission-design.6.2 功能权限矩阵", "permission-design.6.3 数据权限规则"]
+      extraction_keys: ["导出对象", "筛选条件", "导出字段", "数据范围", "权限点"]
+
+  - id: be-import
+    domain: backend
+    parent_element_id: backend-impl
+    order: 6
+    spec_path: spec/backend/be-import.md
+    standard_path: standards/backend/be-import.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/backend.md"
+      heading: "## §3.7 导入设计"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["feature-spec.5.3 子特性详细规格", "info-architecture.4.3 实体详情"]
+      optional_sections: ["ui-prototype.3.2 页面功能规格", "permission-design.6.2 功能权限矩阵", "permission-design.6.3 数据权限规则"]
+      extraction_keys: ["导入对象", "模板字段", "批量大小", "数据范围", "权限点"]
+
+  - id: be-schedule
+    domain: backend
+    parent_element_id: backend-impl
+    order: 7
+    spec_path: spec/backend/be-schedule.md
+    standard_path: standards/backend/be-schedule.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/backend.md"
+      heading: "## §3.8 定时任务"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["feature-spec.5.3 子特性详细规格"]
+      optional_sections: ["scenario-solution.9.3 场景详细描述", "config-design.8.2 IT管理配置项", "nfr.10.5 可维护性"]
+      extraction_keys: ["任务触发条件", "执行周期", "处理对象", "失败重试", "配置项"]
+
+  - id: be-workflow
+    domain: backend
+    parent_element_id: backend-impl
+    order: 8
+    spec_path: spec/backend/be-workflow.md
+    standard_path: standards/backend/be-workflow.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/backend.md"
+      heading: "## §3.9 工作流"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["scenario-solution.9.3 场景详细描述", "feature-spec.5.3 子特性详细规格", "permission-design.6.1 角色定义"]
+      optional_sections: ["permission-design.6.2 功能权限矩阵", "info-architecture.4.4 实体状态流转"]
+      extraction_keys: ["流程节点", "审批角色", "流转条件", "撤回/驳回规则", "状态流转"]
+
+  - id: fe-tech-stack
+    domain: frontend
+    parent_element_id: frontend
+    order: 1
+    spec_path: spec/frontend/fe-tech-stack.md
+    standard_path: standards/frontend/fe-tech-stack.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/frontend.md"
+      heading: "## §4.1 技术选型"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["ui-prototype.3.5 兼容性要求", "nfr.10.4 易用性"]
+      optional_sections: ["nfr.10.1 性能要求", "nfr.10.3 安全隐私", "nfr.10.5 可维护性"]
+      extraction_keys: ["终端类型", "浏览器要求", "兼容性", "性能要求", "安全隐私", "组件库约束"]
+    aliases: []
+
+  - id: fe-page-structure
+    domain: frontend
+    parent_element_id: frontend
+    order: 2
+    spec_path: spec/frontend/fe-page-structure.md
+    standard_path: standards/frontend/fe-page-structure.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/frontend.md"
+      heading: "## §4.2 路由信息设计"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["ui-prototype.3.1 页面清单", "ui-prototype.3.3 菜单结构", "ui-prototype.3.4 Pageflow"]
+      optional_sections: ["ui-prototype.3.2 页面功能规格", "permission-design.6.2 功能权限矩阵"]
+      extraction_keys: ["页面", "路由", "菜单", "入口", "页面跳转", "权限点"]
+    aliases: ['fe-route-design', 'fe-layout']
+
+  - id: fe-component
+    domain: frontend
+    parent_element_id: frontend
+    order: 3
+    spec_path: spec/frontend/fe-component.md
+    standard_path: standards/frontend/fe-component.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/frontend.md"
+      heading: "## §4.4 组件与字段"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["ui-prototype.3.2 页面功能规格", "ui-prototype.3.6 交互原型"]
+      optional_sections: ["info-architecture.4.3 实体详情", "feature-spec.5.3 子特性详细规格", "nfr.10.4 易用性"]
+      extraction_keys: ["页面字段", "组件", "校验规则", "展示规则", "操作按钮", "实体字段"]
+    aliases: ['fe-component-field']
+
+  - id: fe-api-binding
+    domain: frontend
+    parent_element_id: frontend
+    order: 4
+    spec_path: spec/frontend/fe-api-binding.md
+    standard_path: standards/frontend/fe-api-binding.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/frontend.md"
+      heading: "## §4.5 接口与数据"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["ui-prototype.3.2 页面功能规格", "feature-spec.5.3 子特性详细规格"]
+      optional_sections: ["integration-design.7.2 API", "info-architecture.4.3 实体详情"]
+      extraction_keys: ["页面动作", "接口动作", "请求字段", "响应字段", "数据绑定", "FR 编号"]
+    aliases: ['fe-api-data']
+
+  - id: fe-interaction-logic
+    domain: frontend
+    parent_element_id: frontend
+    order: 5
+    spec_path: spec/frontend/fe-interaction-logic.md
+    standard_path: standards/frontend/fe-interaction-logic.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/frontend.md"
+      heading: "## §4.6 交互逻辑"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["ui-prototype.3.4 Pageflow", "ui-prototype.3.6 交互原型", "scenario-solution.9.3 场景详细描述", "ui-prototype.3.2 页面功能规格"]
+      optional_sections: ["info-architecture.4.4 实体状态流转", "nfr.10.4 易用性"]
+      extraction_keys: ["用户操作", "反馈方式", "跳转规则", "异常提示", "场景步骤", "页面状态", "状态来源", "初始化规则", "重置规则", "实体状态"]
+    aliases: ['fe-state']
+
+  - id: fe-nfr
+    domain: frontend
+    parent_element_id: frontend
+    order: 6
+    spec_path: spec/frontend/fe-nfr.md
+    standard_path: standards/frontend/fe-nfr.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/frontend.md"
+      heading: "## §4.7 非功能设计"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["nfr.10.1 性能要求", "nfr.10.3 安全隐私", "nfr.10.4 易用性"]
+      optional_sections: ["nfr.10.2 埋点要求", "nfr.10.5 可维护性", "ui-prototype.3.5 兼容性要求", "ui-prototype.3.2 页面功能规格", "ui-prototype.3.6 交互原型"]
+      extraction_keys: ["性能指标", "安全隐私", "兼容性", "易用性", "埋点要求", "语言范围", "文案来源", "日期/数字格式", "区域规则"]
+    aliases: ['fe-i18n']
+
+  - id: integration-mq
+    domain: integration
+    parent_element_id: integration
+    order: 1
+    spec_path: spec/integration/integration-mq.md
+    standard_path: standards/integration/integration-mq.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/integration.md"
+      heading: "## §5.1 消息队列"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["integration-design.7.1 集成点", "integration-design.7.3 MQS"]
+      optional_sections: ["feature-spec.5.3 子特性详细规格", "scenario-solution.9.3 场景详细描述"]
+      extraction_keys: ["集成点", "MQS", "事件", "Topic", "生产者", "消费者", "重试/补偿"]
+
+  - id: integration-external
+    domain: integration
+    parent_element_id: integration
+    order: 2
+    spec_path: spec/integration/integration-external.md
+    standard_path: standards/integration/integration-external.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/integration.md"
+      heading: "## §5.2 外部系统"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["integration-design.7.1 集成点", "integration-design.7.2 API"]
+      optional_sections: ["integration-design.7.4 数据集成", "scenario-solution.9.2 解决方案集成图", "scenario-solution.9.3 场景详细描述"]
+      extraction_keys: ["集成点", "外部系统", "API", "接口契约", "认证方式", "异常处理"]
+
+  - id: integration-notification
+    domain: integration
+    parent_element_id: integration
+    order: 3
+    spec_path: spec/integration/integration-notification.md
+    standard_path: standards/integration/integration-notification.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/integration.md"
+      heading: "## §5.3 通知"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["feature-spec.5.3 子特性详细规格", "scenario-solution.9.3 场景详细描述"]
+      optional_sections: ["integration-design.7.1 集成点", "permission-design.6.1 角色定义"]
+      extraction_keys: ["通知场景", "通知通道", "接收人", "触发条件", "模板变量"]
+
+  - id: config-app-config
+    domain: config
+    parent_element_id: config
+    order: 1
+    spec_path: spec/config/config-app-config.md
+    standard_path: standards/config/config-app-config.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/config.md"
+      heading: "## §6.1 应用配置"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["config-design.8.1 用户配置项", "config-design.8.2 IT管理配置项"]
+      optional_sections: ["feature-spec.5.3 子特性详细规格", "nfr.10.5 可维护性"]
+      extraction_keys: ["用户配置项", "IT管理配置项", "配置 Key", "默认值", "生效范围", "变更频率"]
+    aliases: ['config-app']
+
+  - id: config-dict
+    domain: config
+    parent_element_id: config
+    order: 2
+    spec_path: spec/config/config-dict.md
+    standard_path: standards/config/config-dict.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/config.md"
+      heading: "## §6.2 数据字典"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["info-architecture.4.3 实体详情", "feature-spec.5.3 子特性详细规格"]
+      optional_sections: ["config-design.8.1 用户配置项", "ui-prototype.3.2 页面功能规格"]
+      extraction_keys: ["字典分类", "字典项", "枚举值", "展示文案", "实体字段"]
+
+  - id: config-error-code
+    domain: config
+    parent_element_id: config
+    order: 3
+    spec_path: spec/config/config-error-code.md
+    standard_path: standards/config/config-error-code.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/config.md"
+      heading: "## §6.3 错误码"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["feature-spec.5.3 子特性详细规格"]
+      optional_sections: ["scenario-solution.9.3 场景详细描述", "ui-prototype.3.2 页面功能规格"]
+      extraction_keys: ["错误场景", "异常分支", "错误提示", "错误码分组", "处理建议"]
+
+  - id: config-nfr-security
+    domain: config
+    parent_element_id: config
+    order: 4
+    spec_path: spec/config/config-nfr-security.md
+    standard_path: standards/config/config-nfr-security.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/config.md"
+      heading: "## §6.4 安全与非功能"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["nfr.10.1 性能要求", "nfr.10.3 安全隐私", "nfr.10.5 可维护性"]
+      optional_sections: ["nfr.10.2 埋点要求", "permission-design.6.3 数据权限规则"]
+      extraction_keys: ["性能指标", "安全隐私", "审计要求", "脱敏规则", "可维护性"]
+
+  - id: config-permission
+    domain: config
+    parent_element_id: config
+    order: 5
+    spec_path: spec/config/config-permission.md
+    standard_path: standards/config/config-permission.md
+    composite_of: []
+    output:
+      file: "{DESIGN_DIR}/config.md"
+      heading: "## §6.5 权限"
+    execute_precheck: false
+    prd_sources:
+      required_sections: ["permission-design.6.1 角色定义", "permission-design.6.2 功能权限矩阵", "permission-design.6.3 数据权限规则"]
+      optional_sections: ["ui-prototype.3.3 菜单结构", "ui-prototype.3.2 页面功能规格", "feature-spec.5.3 子特性详细规格"]
+      extraction_keys: ["角色", "功能权限", "数据权限", "资源", "操作", "菜单", "按钮权限"]
