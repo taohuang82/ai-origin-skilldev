@@ -1,0 +1,20 @@
+element_type: TechnicalArchitecture
+name_cn: 技术架构总览
+schema_version: "1.0.0"
+common_fields:
+  required: [id, element_type, name, status]
+  optional: [domain, provenance, lineage, code_anchors, external_refs]
+fields:
+  - name: sections
+    type: object
+    required: true
+    desc: 技术架构各维度（扩展位）
+    sub_fields:
+      - { name: backend_stack,     type: object, required: true,  desc: "{ language, framework, orm }" }
+      - { name: frontend_stack,    type: object, required: true,  desc: "{ framework, lang, build }" }
+      - { name: middleware,        type: object, required: true,  desc: "{ db, cache, mq }" }
+      - { name: external_libs,     type: array,  required: false, desc: 外部二方件 }
+      - { name: deployment,        type: string, required: false }
+      - { name: code_architecture, type: string, required: false }
+relations_held: []
+stage_increments: {}

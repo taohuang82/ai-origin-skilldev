@@ -1,0 +1,19 @@
+element_type: Integration
+name_cn: 集成点
+schema_version: "1.0.0"
+common_fields:
+  required: [id, element_type, name, status]
+  optional: [domain, provenance, lineage, code_anchors, external_refs]
+fields:
+  - { name: domain, type: string, required: true, relation: part_of, target: Domain, desc: 归属领域 }
+  - { name: integration_type, type: enum, required: true, enum: [api, mq, data_sync, file_exchange], desc: 集成方式 }
+  - { name: direction, type: enum, required: true, enum: [inbound, outbound], desc: 方向 }
+  - { name: external_system, type: string, required: true, relation: external_ref, target: 外部APP要素, desc: 外部系统 }
+  - { name: interface_contract, type: object, required: true, desc: "{ url, method, auth }" }
+  - { name: fault_tolerance, type: object, required: false, desc: "TDD 补：{ timeout_ms, retry, fallback }" }
+relations_held:
+  - { relation: part_of,      target: Domain,      via: domain,          seq: 4 }
+  - { relation: external_ref, target: 外部APP要素,  via: external_system, seq: 33 }
+stage_increments:
+  PRD: [domain, integration_type, direction, external_system, interface_contract]
+  TDD: [fault_tolerance]

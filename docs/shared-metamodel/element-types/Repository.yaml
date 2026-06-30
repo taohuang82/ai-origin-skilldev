@@ -1,0 +1,13 @@
+element_type: Repository
+name_cn: 仓储
+schema_version: "1.0.0"
+common_fields:
+  required: [id, element_type, name, status]
+  optional: [domain, provenance, lineage, code_anchors, external_refs]
+fields:
+  - { name: domain, type: string, required: true, relation: part_of, target: Domain, desc: 归属领域 }
+  - { name: methods, type: array, required: true, desc: 持久化方法 }
+  - { name: caching_strategy, type: object, required: false, desc: "{ key_pattern, structure, ttl, consistency }" }
+relations_held:
+  - { relation: part_of, target: Domain, via: domain, seq: 4 }
+stage_increments: {}
