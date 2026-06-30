@@ -1,0 +1,81 @@
+# relations.yaml —— M3 共享关系权威（10 类型 + 39 组合）
+# source_property 是属性名唯一权威：§5 此表 == element-types/{Type}.yaml 字段名 == change-element-mapping.yaml reverse_via
+# seq 是关系全局编号，change-element-mapping.yaml 的 ref 即引用此编号。七铁律见上。
+spec_version: "1.0.0"
+
+relation_types:
+  - { id: triggered_by,        cardinality: N:1, semantic: 要素由某原始需求触发, enters_lineage: true }
+  - { id: part_of,             cardinality: N:1, semantic: 要素归属父要素 }
+  - { id: aggregate_member_of, cardinality: N:1, semantic: 子实体归属聚合根, constraints: [same_transaction, cascade_delete, no_independent_access] }
+  - { id: uses,                cardinality: N:M, semantic: 引用/调用另一要素 }
+  - { id: depends_on,          cardinality: N:M, semantic: 依赖另一要素协变 }
+  - { id: managed_by,          cardinality: 1:1, semantic: 聚合根由某仓储持久化 }
+  - { id: realizes,            cardinality: N:M, semantic: 实现侧要素实现某子特性 }
+  - { id: emits,               cardinality: N:M, semantic: 聚合根发出领域事件 }
+  - { id: subscribes_to,       cardinality: N:M, semantic: 订阅方订阅领域事件, reverse_stored: true }
+  - { id: external_ref,        cardinality: N:M, semantic: 引用外部 APP 要素 }
+
+valid_combinations:
+  - { seq: 1,  source: 任意要素,           relation: triggered_by,        target: OriginalRequirement, source_property: "lineage.triggered_by" }
+  - { seq: 2,  source: Feature,            relation: part_of,             target: Domain,              source_property: "domain" }
+  - { seq: 3,  source: SubFeature,         relation: part_of,             target: Feature,             source_property: "feature" }
+  - { seq: 4,  source: Aggregate,          relation: part_of,             target: Domain,              source_property: "domain", note: "同适用 BusinessRule/Permission/Configuration/DomainService/ApplicationService/Repository/API（均用 domain）" }
+  - { seq: 5,  source: BusinessProcess,    relation: part_of,             target: Domain,              source_property: "involves_domains", note: "多域；同适用 Scenario" }
+  - { seq: 6,  source: Page,               relation: part_of,             target: 前端模块,             source_property: "domain", note: "弱 part_of" }
+  - { seq: 7,  source: Entity,             relation: aggregate_member_of, target: Aggregate,           source_property: "aggregate_member_of" }
+  - { seq: 8,  source: BusinessProcess,    relation: uses,                target: Role,                source_property: "activities[].role", note: "子结构：活动" }
+  - { seq: 9,  source: BusinessProcess,    relation: uses,                target: BusinessRule,        source_property: "activities[].rules", note: "子结构：活动" }
+  - { seq: 10, source: SubFeature,         relation: uses,                target: BusinessRule,        source_property: "referenced_rules" }
+  - { seq: 11, source: SubFeature,         relation: uses,                target: Role,                source_property: "performed_by_roles" }
+  - { seq: 12, source: SubFeature,         relation: uses,                target: Integration,         source_property: "integration_points" }
+  - { seq: 13, source: Page,               relation: uses,                target: API,                 source_property: "called_apis" }
+  - { seq: 14, source: Page,               relation: uses,                target: Component,           source_property: "used_components" }
+  - { seq: 15, source: Permission,         relation: uses,                target: Role,                source_property: "role_permission_matrix[].role", note: "另含 data_permissions[].applies_to_roles" }
+  - { seq: 16, source: Scenario,           relation: uses,                target: BusinessProcess,     source_property: "from_process", note: "派生（uses 变体）" }
+  - { seq: 17, source: Scenario,           relation: uses,                target: SubFeature,          source_property: "sub_feature_path", note: "有序路径" }
+  - { seq: 18, source: Aggregate,          relation: uses,                target: ValueObject,         source_property: "fields[].value_object", note: "子结构：字段" }
+  - { seq: 19, source: DomainService,      relation: uses,                target: BusinessRule,        source_property: "operations[].enforces_rules", note: "子结构：操作" }
+  - { seq: 20, source: ApplicationService, relation: uses,                target: DomainService,       source_property: "orchestration_uses.services" }
+  - { seq: 21, source: ApplicationService, relation: uses,                target: Repository,          source_property: "orchestration_uses.repositories" }
+  - { seq: 22, source: ApplicationService, relation: uses,                target: Integration,         source_property: "uses_integrations" }
+  - { seq: 23, source: API,                relation: uses,                target: 错误码字典,           source_property: "error_codes[].ref", note: "目标为 Configuration:DICT-ERROR-CODES" }
+  - { seq: 24, source: DomainService,      relation: depends_on,          target: Aggregate,           source_property: "collaborates_with_entities" }
+  - { seq: 25, source: ApplicationService, relation: depends_on,          target: Aggregate,           source_property: "involves_aggregates" }
+  - { seq: 26, source: API,                relation: depends_on,          target: ApplicationService,  source_property: "depends_on" }
+  - { seq: 27, source: Aggregate,          relation: managed_by,          target: Repository,          source_property: "managed_by_repository" }
+  - { seq: 28, source: Page,               relation: realizes,            target: SubFeature,          source_property: "realizes_sub_features" }
+  - { seq: 29, source: Permission,         relation: realizes,            target: SubFeature,          source_property: "function_permissions[].from_sub_feature", note: "子结构：功能权限点" }
+  - { seq: 30, source: API,                relation: realizes,            target: SubFeature,          source_property: "realizes_sub_feature" }
+  - { seq: 31, source: Aggregate,          relation: emits,               target: DomainEvent,         source_property: "emits_events" }
+  - { seq: 32, source: 外部订阅方,          relation: subscribes_to,       target: DomainEvent,         source_property: "subscribers", note: "唯一反向存储例外" }
+  - { seq: 33, source: Integration,        relation: external_ref,        target: 外部APP要素,          source_property: "external_system" }
+  - { seq: 34, source: Aggregate,          relation: external_ref,        target: 外部APP要素,          source_property: "fields[].external_ref", note: "子结构：字段" }
+  - { seq: 35, source: NonFunctional,      relation: uses,                target: SubFeature,          source_property: "applies_to", note: "作用于（uses 变体）；也可指向 Page" }
+  - { seq: 36, source: Domain,             relation: uses,                target: Domain,              source_property: "boundary_with_other_domains", note: "协作（非要素边，记录用）" }
+  - { seq: 37, source: BusinessRule,       relation: uses,                target: 错误码字典,           source_property: "error_code", note: "规则关联错误码字典条目" }
+  - { seq: 38, source: Aggregate,          relation: uses,                target: BusinessRule,        source_property: "state_machine.transitions[].guards", note: "状态机守卫引用规则（子结构：转换）" }
+  - { seq: 39, source: Aggregate,          relation: uses,                target: Role,                source_property: "state_machine.transitions[].triggered_by", note: "状态机转换触发角色（子结构：转换）" }
+
+# 已砍除的反向冗余/链式可推属性（禁止在任何 schema 出现）：
+removed_redundant_properties:
+  - BusinessRule.applies_to
+  - Feature.sub_features
+  - Aggregate.aggregate_members
+  - API.called_by_pages
+  - Component.used_by_pages
+  - DomainEvent.emitted_by
+  - Repository.serves_aggregate_root
+  - SubFeature.domain
+  - Entity.domain
+  - DomainEvent.domain
+  - Aggregate.aggregate_root
+  - Feature.milestone
+
+# 暂缓（待 ia-test-design）：
+deferred_relations:
+  - { source: TestScenario, target: Scenario }
+  - { source: TestScenario, target: API }
+  - { source: TestCase,     target: SubFeature, note: "AC" }
+  - { source: TestCase,     target: TestScenario }
+  - { source: TestCase,     target: 被测要素 }
+  - { source: TestData,     target: Entity }

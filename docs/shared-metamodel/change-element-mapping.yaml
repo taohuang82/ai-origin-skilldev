@@ -1,0 +1,235 @@
+# change-element-mapping.yaml —— L3.5 共享变化点→要素影响（23）
+# ref 引用 relations.yaml 的 seq 编号；语义推断项无 reverse_via/ref，必带 condition。测试命中暂缓。
+spec_version: "1.0.0"
+
+change_element_mappings:
+
+  - change_id: RQ-01
+    name: 提出新需求
+    direct_hit:
+      - { element_type: OriginalRequirement, action: create, confidence: certain }
+    closure_hits: []
+
+  - change_id: DM-01
+    name: 新增/调整领域
+    direct_hit:
+      - { element_type: Domain, action: create, confidence: certain }
+    closure_hits:
+      - { element_type: ProductOverview, action: modify, confidence: certain, basis: 语义推断, condition: 应用架构图/context map 必重绘 }
+      - { element_type: Scenario,   action: modify, confidence: conditional, basis: 关系反查, reverse_via: involves_domains, ref: "seq:5", condition: 场景跨该域 }
+      - { element_type: Permission, action: modify, confidence: conditional, basis: 关系反查, reverse_via: domain, ref: "seq:4", condition: 归属该域 }
+      - { element_type: Aggregate,  action: modify, confidence: conditional, basis: 关系反查, reverse_via: domain, ref: "seq:4", condition: 归属该域 }
+      - { element_type: Entity,     action: modify, confidence: conditional, basis: 关系反查, reverse_via: "aggregate_member_of → domain", ref: "seq:7,seq:4", condition: 经聚合归属该域 }
+      - { element_type: Feature,    action: create, confidence: likely, basis: 语义推断, condition: 新域常带新特性，走 FT-01 }
+
+  - change_id: FT-01
+    name: 新增/调整特性
+    direct_hit:
+      - { element_type: Feature, action: create, confidence: certain }
+    closure_hits:
+      - { element_type: ProductOverview, action: modify, confidence: certain, basis: 语义推断, condition: 应用架构图层级重绘 }
+      - { element_type: Scenario,   action: modify, confidence: conditional, basis: 关系反查, reverse_via: "sub_feature_path → feature", ref: "seq:17,seq:3", condition: 路径子特性归属本特性 }
+      - { element_type: SubFeature, action: create, confidence: likely, basis: 语义推断, condition: 新特性常带新子特性，走 FE-01 }
+      - { element_type: Domain,     action: modify, confidence: conditional, basis: 关系反查, reverse_via: domain, ref: "seq:2", condition: 特性归属待定时确认 }
+
+  - change_id: PR-01
+    name: 流程加改删活动
+    direct_hit:
+      - { element_type: BusinessProcess, action: modify, confidence: certain }
+    closure_hits:
+      - { element_type: Role,         action: create, confidence: conditional, basis: 关系反查, reverse_via: "activities[].role",  ref: "seq:8", condition: 新活动引入新角色 }
+      - { element_type: BusinessRule, action: create, confidence: conditional, basis: 关系反查, reverse_via: "activities[].rules", ref: "seq:9", condition: 新活动引入新规则 }
+      - { element_type: Scenario,     action: modify, confidence: likely,      basis: 关系反查, reverse_via: from_process, ref: "seq:16", condition: 反查派生本流程的场景 }
+      - { element_type: SubFeature,   action: create, confidence: conditional, basis: 语义推断, condition: 新活动可能对应新能力 }
+
+  - change_id: PR-02
+    name: 新增业务场景
+    direct_hit:
+      - { element_type: Scenario, action: create, confidence: certain }
+    closure_hits:
+      - { element_type: Domain,     action: modify, confidence: conditional, basis: 关系反查, reverse_via: involves_domains, ref: "seq:5", condition: 新场景归属确认 }
+      - { element_type: SubFeature, action: create, confidence: conditional, basis: 关系反查, reverse_via: sub_feature_path, ref: "seq:17", condition: 路径引用的子特性缺则建 }
+
+  - change_id: RU-01
+    name: 加改业务规则
+    direct_hit:
+      - { element_type: BusinessRule, action: create, confidence: certain }
+    closure_hits:
+      - { element_type: Configuration,  action: modify, confidence: conditional, basis: 关系反查, reverse_via: error_code, ref: "seq:37", condition: 关联新错误码 }
+      - { element_type: SubFeature,     action: modify, confidence: likely,      basis: 关系反查, reverse_via: referenced_rules, ref: "seq:10", condition: 子特性引用本规则则 AC 可能变 }
+      - { element_type: BusinessProcess, action: modify, confidence: likely,     basis: 关系反查, reverse_via: "activities[].rules", ref: "seq:9", condition: 活动引用本规则 }
+      - { element_type: DomainService,  action: modify, confidence: conditional, basis: 关系反查, reverse_via: "operations[].enforces_rules", ref: "seq:19", condition: 操作 enforces 本规则 }
+      - { element_type: Scenario,       action: modify, confidence: conditional, basis: 关系反查, reverse_via: "sub_feature_path → referenced_rules", ref: "seq:17,seq:10", condition: 路径子特性引用本规则 }
+
+  - change_id: RO-01
+    name: 加改角色
+    direct_hit:
+      - { element_type: Role, action: create, confidence: certain }
+    closure_hits:
+      - { element_type: Permission,     action: modify, confidence: likely,      basis: 关系反查, reverse_via: "role_permission_matrix[].role", ref: "seq:15", condition: 矩阵含本角色 }
+      - { element_type: SubFeature,     action: modify, confidence: conditional, basis: 关系反查, reverse_via: performed_by_roles, ref: "seq:11", condition: 子特性含本角色 }
+      - { element_type: BusinessProcess, action: modify, confidence: conditional, basis: 关系反查, reverse_via: "activities[].role", ref: "seq:8", condition: 活动含本角色 }
+      - { element_type: Scenario,       action: modify, confidence: conditional, basis: 关系反查, reverse_via: "sub_feature_path → performed_by_roles", ref: "seq:17,seq:11", condition: 路径子特性含本角色 }
+
+  - change_id: FE-01
+    name: 加改子特性
+    direct_hit:
+      - { element_type: SubFeature, action: create, confidence: certain }
+    closure_hits:
+      - { element_type: Feature,       action: modify, confidence: conditional, basis: 关系反查, reverse_via: feature, ref: "seq:3", condition: 归属确认 }
+      - { element_type: Domain,        action: modify, confidence: conditional, basis: 关系反查, reverse_via: "feature → domain", ref: "seq:3,seq:2", condition: 经特性归属域 }
+      - { element_type: Page,          action: create, confidence: likely,      basis: 语义推断, condition: 新能力常需新页面，走 UI-01 }
+      - { element_type: Permission,    action: modify, confidence: likely,      basis: 关系反查, reverse_via: "function_permissions[].from_sub_feature", ref: "seq:29", condition: 新子特性带新功能权限点 }
+      - { element_type: API,           action: create, confidence: likely,      basis: 关系反查, reverse_via: realizes_sub_feature, ref: "seq:30", condition: 新能力需新接口 }
+      - { element_type: NonFunctional, action: create, confidence: conditional, basis: 关系反查, reverse_via: applies_to, ref: "seq:35", condition: 新能力带 DFX 诉求 }
+      - { element_type: Scenario,      action: modify, confidence: conditional, basis: 关系反查, reverse_via: sub_feature_path, ref: "seq:17", condition: 子特性进场景路径 }
+
+  - change_id: FE-02
+    name: 给子特性加操作或AC
+    direct_hit:
+      - { element_type: SubFeature, action: modify, confidence: certain }
+    closure_hits:
+      - { element_type: API,           action: modify, confidence: likely,      basis: 关系反查, reverse_via: realizes_sub_feature, ref: "seq:30", condition: 操作变接口变 }
+      - { element_type: Page,          action: modify, confidence: likely,      basis: 关系反查, reverse_via: realizes_sub_features, ref: "seq:28", condition: 交互变 }
+      - { element_type: NonFunctional, action: modify, confidence: conditional, basis: 关系反查, reverse_via: applies_to, ref: "seq:35", condition: 新操作带 DFX }
+
+  - change_id: UI-01
+    name: 页面加改控件字段防呆
+    direct_hit:
+      - { element_type: Page, action: modify, confidence: certain }
+    closure_hits:
+      - { element_type: Component,     action: create, confidence: conditional, basis: 关系反查, reverse_via: used_components, ref: "seq:14", condition: 新控件需新组件 }
+      - { element_type: API,           action: modify, confidence: conditional, basis: 关系反查, reverse_via: called_apis, ref: "seq:13", condition: 新字段需新接口字段 }
+      - { element_type: NonFunctional, action: modify, confidence: conditional, basis: 关系反查, reverse_via: applies_to, ref: "seq:35", condition: 复杂交互带前端 DFX }
+
+  - change_id: UI-02
+    name: 新增前端组件
+    direct_hit:
+      - { element_type: Component, action: create, confidence: certain }
+    closure_hits:
+      - { element_type: Page, action: modify, confidence: certain, basis: 关系反查, reverse_via: used_components, ref: "seq:14", condition: 引用方页面加引用 }
+
+  - change_id: DA-01
+    name: 实体聚合根加改字段
+    direct_hit:
+      - { element_type: Aggregate, action: modify, confidence: certain }
+      - { element_type: Entity,    action: modify, confidence: certain }
+    closure_hits:
+      - { element_type: API,                action: modify, confidence: likely,      basis: 关系反查, reverse_via: realizes_sub_feature, ref: "seq:30", condition: 请求/响应引用该实体字段 }
+      - { element_type: SubFeature,         action: modify, confidence: likely,      basis: 关系顺查, reverse_via: entity_operations, condition: 业务文本提及该实体则语义协变 }
+      - { element_type: Page,               action: modify, confidence: conditional, basis: 关系反查, reverse_via: realizes_sub_features, ref: "seq:28", condition: 反查 realizes 该子特性的页面 }
+      - { element_type: DomainService,      action: modify, confidence: conditional, basis: 关系反查, reverse_via: collaborates_with_entities, ref: "seq:24", condition: 含该聚合 }
+      - { element_type: ApplicationService, action: modify, confidence: conditional, basis: 关系反查, reverse_via: involves_aggregates, ref: "seq:25", condition: 含该聚合 }
+      - { element_type: Repository,         action: modify, confidence: conditional, basis: 关系反查, reverse_via: managed_by_repository, ref: "seq:27", condition: 需新查询 }
+      - { element_type: Scenario,           action: modify, confidence: conditional, basis: 关系反查, reverse_via: sub_feature_path, ref: "seq:17", condition: 路径子特性的实体操作含该实体 }
+      - { element_type: BusinessRule,       action: create, confidence: conditional, basis: 语义推断, condition: 新字段带来新约束 }
+      - { element_type: Integration,        action: create, confidence: conditional, basis: 关系反查, reverse_via: "fields[].external_ref", ref: "seq:34", condition: 字段值来自外部 }
+      - { element_type: ValueObject,        action: create, confidence: conditional, basis: 关系反查, reverse_via: "fields[].value_object", ref: "seq:18", condition: 字段是新值对象 }
+      - { element_type: ProductOverview,    action: modify, confidence: conditional, basis: 语义推断, condition: 实体关系变则 LDM 重绘 }
+
+  - change_id: DA-02
+    name: 加改状态机
+    direct_hit:
+      - { element_type: Aggregate, action: modify, confidence: certain }
+    closure_hits:
+      - { element_type: BusinessRule, action: modify, confidence: conditional, basis: 关系反查, reverse_via: "state_machine.transitions[].guards",       ref: "seq:38", condition: 守卫引用规则 }
+      - { element_type: Role,         action: modify, confidence: conditional, basis: 关系反查, reverse_via: "state_machine.transitions[].triggered_by", ref: "seq:39", condition: 转换触发角色 }
+      - { element_type: DomainEvent,  action: modify, confidence: conditional, basis: 关系反查, reverse_via: emits_events, ref: "seq:31", condition: 转换 emits 事件 }
+      - { element_type: Scenario,     action: modify, confidence: likely,      basis: 关系反查, reverse_via: sub_feature_path, ref: "seq:17", condition: 状态流转影响场景路径 }
+
+  - change_id: DA-03
+    name: 加改值对象或数据字典
+    direct_hit:
+      - { element_type: ValueObject, action: create, confidence: certain }
+    closure_hits:
+      - { element_type: Aggregate, action: modify, confidence: conditional, basis: 关系反查, reverse_via: "fields[].value_object", ref: "seq:18", condition: 字段引用本 VO }
+      - { element_type: Entity,    action: modify, confidence: conditional, basis: 关系反查, reverse_via: "fields[].value_object", ref: "seq:18", condition: 字段引用本 VO }
+
+  - change_id: EV-01
+    name: 加改领域事件或订阅
+    direct_hit:
+      - { element_type: DomainEvent, action: create, confidence: certain }
+    closure_hits:
+      - { element_type: Aggregate,          action: modify, confidence: likely,      basis: 关系反查, reverse_via: emits_events, ref: "seq:31", condition: 事件新增时补发出方 }
+      - { element_type: ApplicationService, action: modify, confidence: conditional, basis: 语义推断, condition: 编排中 publish 该事件 }
+
+  - change_id: IN-01
+    name: 加改对外集成
+    direct_hit:
+      - { element_type: Integration, action: create, confidence: certain }
+    closure_hits:
+      - { element_type: ApplicationService, action: modify, confidence: likely,      basis: 关系反查, reverse_via: uses_integrations, ref: "seq:22", condition: 编排调用 }
+      - { element_type: SubFeature,         action: modify, confidence: conditional, basis: 关系反查, reverse_via: integration_points, ref: "seq:12", condition: 子特性含本集成 }
+      - { element_type: Scenario,           action: modify, confidence: conditional, basis: 关系反查, reverse_via: "sub_feature_path → integration_points", ref: "seq:17,seq:12", condition: 路径子特性含本集成 }
+      - { element_type: Configuration,      action: create, confidence: conditional, basis: 语义推断, condition: 集成需端点/密钥配置 }
+      - { element_type: NonFunctional,      action: create, confidence: conditional, basis: 语义推断, condition: 集成需容错/降级 DFX }
+
+  - change_id: LG-01
+    name: 加改跨聚合领域逻辑
+    direct_hit:
+      - { element_type: DomainService, action: create, confidence: certain }
+    closure_hits:
+      - { element_type: ApplicationService, action: modify, confidence: likely,      basis: 关系反查, reverse_via: "orchestration_uses.services", ref: "seq:20", condition: 编排含本 DS }
+      - { element_type: BusinessRule,       action: create, confidence: conditional, basis: 关系反查, reverse_via: "operations[].enforces_rules", ref: "seq:19", condition: enforces 新规则 }
+      - { element_type: Aggregate,          action: modify, confidence: conditional, basis: 关系反查, reverse_via: collaborates_with_entities, ref: "seq:24", condition: 逻辑触及聚合 }
+
+  - change_id: LG-02
+    name: 加改用例编排或事务
+    direct_hit:
+      - { element_type: ApplicationService, action: create, confidence: certain }
+    closure_hits:
+      - { element_type: API,           action: modify, confidence: likely,      basis: 关系反查, reverse_via: depends_on, ref: "seq:26", condition: 接口依赖本 AS }
+      - { element_type: DomainService, action: modify, confidence: conditional, basis: 关系反查, reverse_via: "orchestration_uses.services", ref: "seq:20", condition: 编排新增对 DS 的 uses }
+      - { element_type: Repository,    action: modify, confidence: conditional, basis: 关系反查, reverse_via: "orchestration_uses.repositories", ref: "seq:21", condition: 编排新增对 Repo 的 uses }
+      - { element_type: Integration,   action: modify, confidence: conditional, basis: 关系反查, reverse_via: uses_integrations, ref: "seq:22", condition: 编排新增对集成的 uses }
+
+  - change_id: IF-01
+    name: 加改UIAPI
+    direct_hit:
+      - { element_type: API, action: create, confidence: certain }
+    closure_hits:
+      - { element_type: Page,               action: modify, confidence: likely,      basis: 关系反查, reverse_via: called_apis, ref: "seq:13", condition: 页面调用本 API }
+      - { element_type: ApplicationService, action: modify, confidence: conditional, basis: 关系反查, reverse_via: depends_on, ref: "seq:26", condition: 新接口需新编排 }
+      - { element_type: DomainService,      action: modify, confidence: conditional, basis: 关系顺查, reverse_via: "depends_on → orchestration_uses.services", ref: "seq:26,seq:20", condition: 契约变要求依赖链协变 }
+      - { element_type: Configuration,      action: modify, confidence: conditional, basis: 关系反查, reverse_via: "error_codes[].ref", ref: "seq:23", condition: 新错误码 }
+
+  - change_id: PM-01
+    name: 加改功能或数据权限
+    direct_hit:
+      - { element_type: Permission, action: modify, confidence: certain }
+    closure_hits:
+      - { element_type: API,  action: modify, confidence: conditional, basis: 语义推断, condition: 权限点收紧影响接口可见性 }
+      - { element_type: Page, action: modify, confidence: conditional, basis: 语义推断, condition: 权限点收紧影响页面可见性 }
+
+  - change_id: CF-01
+    name: 加改配置项或错误码
+    direct_hit:
+      - { element_type: Configuration, action: create, confidence: certain }
+    closure_hits:
+      - { element_type: BusinessRule,       action: modify, confidence: conditional, basis: 关系反查, reverse_via: error_code, ref: "seq:37", condition: 规则引用本字典条目 }
+      - { element_type: API,                action: modify, confidence: conditional, basis: 关系反查, reverse_via: "error_codes[].ref", ref: "seq:23", condition: 接口引用本字典 }
+      - { element_type: ApplicationService, action: modify, confidence: conditional, basis: 语义推断, condition: 编排 uses 本配置 }
+
+  - change_id: NF-01
+    name: 加改非功能DFX
+    direct_hit:
+      - { element_type: NonFunctional, action: create, confidence: certain }
+    closure_hits:
+      - { element_type: SubFeature,            action: modify, confidence: conditional, basis: 关系反查, reverse_via: applies_to, ref: "seq:35", condition: 被作用要素需调实现 }
+      - { element_type: Page,                  action: modify, confidence: conditional, basis: 关系反查, reverse_via: applies_to, ref: "seq:35", condition: 被作用页面需调实现 }
+      - { element_type: TechnicalArchitecture, action: modify, confidence: conditional, basis: 语义推断, condition: 方案涉及架构如加缓存/限流 }
+
+  - change_id: AR-01
+    name: 技术选型部署中间件变更
+    direct_hit:
+      - { element_type: TechnicalArchitecture, action: modify, confidence: certain }
+    closure_hits:
+      - { element_type: Repository,    action: modify, confidence: conditional, basis: 语义推断, condition: 存储选型变如 MySQL→TiDB，需调方法/缓存 }
+      - { element_type: Integration,   action: modify, confidence: conditional, basis: 语义推断, condition: 中间件/协议变如 HTTP→gRPC，需调 fault_tolerance/adapter }
+      - { element_type: NonFunctional, action: create, confidence: conditional, basis: 语义推断, condition: 架构调整带新 DFX 诉求如缓存一致性 }
+
+# always_affected（每次增量强制叠加）
+always_affected:
+  - { element_type: OriginalRequirement, action: create, trigger: 每次增量必建新 RR }
+  - { element_type: ProductOverview, action: modify, trigger: 任何 DM-01/FT-01 或实体关系变化 }
+  - { note: "任何 create/modify/deprecate → cross-references 重建（机器派生，不在本表）" }
