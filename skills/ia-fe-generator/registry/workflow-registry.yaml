@@ -1,0 +1,32 @@
+# ia-fe-generator · workflow-registry.yaml
+workflows:
+  - id: "fe-new-build"
+    name: "FE 新建（0→1）"
+    priority: 10
+    input_signature:
+      required:
+        - { id: "REQUIREMENT_INPUT", reason: "必须有原始需求（对话或文档）才能生成 FE" }
+      excluded:
+        - { id: "FE_DOC_COMPLETED", reason: "已有完成态 FE 时不重复新建" }
+      optional:
+        - { id: "REQUIREMENT_DOC", reason: "有需求文档则先抽取再澄清" }
+    trigger_keywords: ["FE", "功能说明书", "功能设计", "生成需求文档", "写个需求"]
+    orchestration_file: "orchestration/o-fe-build.md"
+    requirement_type: ["TP", "AP", "AI", "IT"]
+    resume_mode: false
+    status: "active"
+
+  - id: "fe-incremental"
+    name: "FE 增量（1→n）"
+    priority: 20
+    input_signature:
+      required:
+        - { id: "ASSET_LIBRARY", reason: "1→n 依赖全量资产库" }
+        - { id: "REQUIREMENT_INPUT", reason: "新增量需求" }
+      excluded: []
+      optional: []
+    trigger_keywords: ["FE 增量", "修改 FE", "变更需求"]
+    orchestration_file: "orchestration/o-fe-incremental.md"
+    requirement_type: ["TP", "AP", "AI", "IT"]
+    resume_mode: false
+    status: "planned"     # 阶段三实现

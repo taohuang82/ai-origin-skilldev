@@ -1,0 +1,18 @@
+element_type: ValueObject
+name_cn: 值对象
+schema_version: "1.0.0"
+common_fields:
+  required: [id, element_type, name, status]
+  optional: [domain, provenance, lineage, code_anchors, external_refs]
+fields:
+  - { name: shared_across_domains, type: bool, required: false, desc: 是否跨域共享 }
+  - { name: immutable, type: bool, required: true, desc: 不可变 }
+  - { name: equality, type: enum, required: true, enum: [by_value], desc: 相等性 }
+  - name: fields
+    type: array<object>
+    required: true
+    sub_fields:
+      - { name: name, type: string, required: true }
+      - { name: type, type: string, required: true }
+relations_held: []
+stage_increments: {}

@@ -1,0 +1,29 @@
+# ia-fe-generator · output-contract.yaml
+# 本 Skill 产出的 FE 文档契约（供下游 ia-fe-to-prd / ia-asset-mgmt 按【阶段=FE】消费）
+contract_version: "1.0.0"
+stage: "FE"
+
+frontmatter_schema:
+  requirement_type:
+    type: "enum"
+    values: ["TP","AP","AI","IT"]
+    required: true
+  stepsCompleted:   { type: "array", required: true }     # 已完成要素 element_type 列表
+  status:           { type: "enum", values: ["in_progress","completed"], required: true }
+  last_element:     { type: "string", required: false }
+  last_updated:     { type: "string", required: false }
+
+# 保证产出的要素（emerge@FE 9 个）；节名=name_cn，字段序=schema.fields，关系名=relations.source_property
+guaranteed_elements:
+  - { element_type: "OriginalRequirement", name_cn: "原始需求" }
+  - { element_type: "ProductOverview",     name_cn: "产品总览" }
+  - { element_type: "BusinessProcess",     name_cn: "业务流程" }
+  - { element_type: "Role",                name_cn: "角色" }
+  - { element_type: "BusinessRule",        name_cn: "业务规则" }
+  - { element_type: "SubFeature",          name_cn: "子特性" }
+  - { element_type: "Page",                name_cn: "页面" }
+  - { element_type: "NonFunctional",       name_cn: "非功能" }
+  - { element_type: "Glossary",            name_cn: "概念术语" }
+
+# 无 manifest、无 sub_elements。跨阶段要素（ProductOverview/BusinessRule/SubFeature/Page/NonFunctional）
+# FE 阶段仅产各自 stage_increments.FE 字段，其余字段留 PRD/TDD 阶段补。

@@ -1,0 +1,25 @@
+element_type: Configuration
+name_cn: 配置项
+schema_version: "1.0.0"
+common_fields:
+  required: [id, element_type, name, status]
+  optional: [domain, provenance, lineage, code_anchors, external_refs]
+fields:
+  - { name: domain, type: string, required: false, relation: part_of, target: Domain, desc: 归属领域（全局配置可空） }
+  - { name: config_type, type: enum, required: true, enum: [业务配置, 技术配置], desc: 配置类型 }
+  - { name: default_value, type: string, required: false, desc: 默认值 }
+  - { name: scope, type: string, required: false, desc: 作用域 }
+  - { name: dynamic_refresh, type: bool, required: false, desc: 动态刷新 }
+  - { name: impact, type: string, required: false, desc: 影响说明 }
+  - name: error_codes
+    type: array<object>
+    required: false
+    desc: "DICT-ERROR-CODES 特例专有：错误码条目数组"
+    sub_fields:
+      - { name: code,    type: string, required: true }
+      - { name: message, type: string, required: true }
+relations_held:
+  - { relation: part_of, target: Domain, via: domain, seq: 4 }
+stage_increments:
+  PRD: [domain, config_type, default_value, scope, dynamic_refresh, impact]
+  TDD: [error_codes]

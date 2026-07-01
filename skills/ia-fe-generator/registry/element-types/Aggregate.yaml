@@ -1,0 +1,48 @@
+element_type: Aggregate
+name_cn: 聚合根
+schema_version: "1.0.0"
+common_fields:
+  required: [id, element_type, name, status]
+  optional: [domain, provenance, lineage, code_anchors, external_refs]
+fields:
+  - { name: domain, type: string, required: true, relation: part_of, target: Domain, desc: 归属领域 }
+  - { name: consistency_boundary, type: string, required: true, desc: 一致性边界说明 }
+  - name: fields
+    type: array<object>
+    required: true
+    desc: 业务/技术字段（PRD 业务字段 → TDD 补全）
+    sub_fields:
+      - { name: name, type: string, required: true }
+      - { name: type, type: string, required: true }
+      - { name: pk,   type: bool,   required: false }
+      - { name: value_object, type: string, required: false, relation: uses, target: ValueObject, desc: 字段是值对象时引用 }
+      - { name: external_ref,  type: string, required: false, relation: external_ref, target: 外部APP要素, desc: 字段值来自外部 }
+  - name: state_machine
+    type: object
+    required: false
+    desc: "TDD 补：状态机"
+    sub_fields:
+      - { name: states, type: array, required: true, desc: 合法状态全集 }
+      - name: transitions
+        type: array<object>
+        required: true
+        sub_fields:
+          - { name: from,         type: string, required: true }
+          - { name: to,           type: string, required: true }
+          - { name: event,        type: string, required: true }
+          - { name: triggered_by, type: string, required: false, relation: uses, target: Role, desc: 触发角色 }
+          - { name: guards,       type: array,  required: false, relation: uses, target: BusinessRule, desc: 守卫规则 }
+  - { name: managed_by_repository, type: string, required: false, relation: managed_by, target: Repository, desc: "TDD 补：持久化仓储" }
+  - { name: emits_events, type: array, required: false, relation: emits, target: DomainEvent, desc: 发出的领域事件 }
+  - { name: ddl, type: object, required: false, desc: "TDD 补：物理表 { table, indexes[] }" }
+relations_held:
+  - { relation: part_of,      target: Domain,       via: domain,                                  seq: 4 }
+  - { relation: managed_by,   target: Repository,   via: managed_by_repository,                   seq: 27 }
+  - { relation: emits,        target: DomainEvent,  via: emits_events,                            seq: 31 }
+  - { relation: uses,         target: ValueObject,  via: "fields[].value_object",                 seq: 18 }
+  - { relation: external_ref, target: 外部APP要素,   via: "fields[].external_ref",                 seq: 34 }
+  - { relation: uses,         target: BusinessRule, via: "state_machine.transitions[].guards",       seq: 38 }
+  - { relation: uses,         target: Role,         via: "state_machine.transitions[].triggered_by", seq: 39 }
+stage_increments:
+  PRD: [domain, consistency_boundary, fields]
+  TDD: [state_machine, managed_by_repository, emits_events, ddl]

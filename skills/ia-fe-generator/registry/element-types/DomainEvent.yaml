@@ -1,0 +1,15 @@
+element_type: DomainEvent
+name_cn: 领域事件
+schema_version: "1.0.0"
+common_fields:
+  required: [id, element_type, name, status]
+  optional: [domain, provenance, lineage, code_anchors, external_refs]
+fields:
+  - { name: payload, type: object, required: true, desc: 事件载荷 }
+  - { name: subscribers, type: array, required: false, relation: subscribes_to, target: 外部订阅方, desc: 订阅方（唯一反向存储例外） }
+  - { name: mq_config, type: object, required: false, desc: "TDD 补：{ topic, idempotent_key, retry_policy }" }
+relations_held:
+  - { relation: subscribes_to, target: 外部订阅方, via: subscribers, seq: 32 }
+stage_increments:
+  PRD: [payload]
+  TDD: [subscribers, mq_config]

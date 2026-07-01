@@ -1,0 +1,26 @@
+# ia-fe-generator · input-type-registry.yaml
+input_types:
+  - id: "REQUIREMENT_INPUT"
+    name: "原始需求输入"
+    description: "对话输入或需求文档，任一存在即视为有需求输入"
+    detect_rules:
+      - { type: "dialog_input", path: "" }                                  # 对话输入始终 true
+      - { type: "dir_not_empty", path: "workspace/{project}/_inputs" }       # 或存在需求文档
+
+  - id: "REQUIREMENT_DOC"
+    name: "原始需求文档"
+    description: "用户上传的原始需求文档（触发 dual_input 抽取）"
+    detect_rules:
+      - { type: "dir_not_empty", path: "workspace/{project}/_inputs" }
+
+  - id: "FE_DOC_COMPLETED"
+    name: "已完成 FE 文档"
+    description: "输出文档存在且 frontmatter.status=completed"
+    detect_rules:
+      - { type: "frontmatter_field", path: "workspace/{project}/fe.md", condition: "status == completed" }
+
+  - id: "ASSET_LIBRARY"
+    name: "资产库"
+    description: "1→n 场景的全量资产库视图（由 ia-asset-mgmt render）"
+    detect_rules:
+      - { type: "dir_not_empty", path: "workspace/{project}/_assets" }

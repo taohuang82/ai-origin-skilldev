@@ -1,0 +1,12 @@
+# ia-fe-generator · standards-registry.yaml
+standards:
+  - id: "mermaid-flowchart"
+    name: "Mermaid 业务流程图规范"
+    file_path: "standards/business-process.md"
+    description: "业务流程要素的 Mermaid flowchart TD 画法与校验"
+    version: "1.0.0"
+  - id: "page-structure"
+    name: "页面要素结构规范"
+    file_path: "standards/page.md"
+    description: "页面要素的类型/路由/realizes/字段/pageflow 结构与校验"
+    version: "1.0.0"

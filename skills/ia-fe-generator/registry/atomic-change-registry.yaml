@@ -1,0 +1,74 @@
+# atomic-change-registry.yaml —— L3.5 共享变化点目录（23）
+# id 与 change-element-mapping.change_id 一一对应。detection_keywords 供 ChangeRouter 自然语言路由。
+spec_version: "1.0.0"
+
+atomic_changes:
+  - { id: RQ-01, name: 提出新需求, category: 需求,
+      description_zh: 业务方提出一条新原始需求, detection_keywords: [新需求, 提个需求, 想做, 希望增加, 能不能加],
+      examples: ["订单创建后想直接指定供应商"], status: active }
+  - { id: DM-01, name: 新增/调整领域, category: 领域,
+      description_zh: 需求超出现有领域，新增或调整领域, detection_keywords: [新领域, 新业务板块, 新模块域, 拆分领域, 新增供应商域],
+      examples: ["新增供应商管理这块业务"], status: active }
+  - { id: FT-01, name: 新增/调整特性, category: 特性,
+      description_zh: 新增或调整一个特性, detection_keywords: [新特性, 新功能模块, 新增能力集, 特性调整],
+      examples: ["上一套供应商管理特性"], status: active }
+  - { id: PR-01, name: 流程加改删活动, category: 流程,
+      description_zh: 业务流程增加/修改/删除活动节点, detection_keywords: [加一步, 增加环节, 删节点, 改流程, 插入活动],
+      examples: ["下单和提交之间加一步指定供应商"], status: active }
+  - { id: PR-02, name: 新增业务场景, category: 流程,
+      description_zh: 按区分维度细分出新业务场景, detection_keywords: [新场景, 加一种情况, 异常场景, 紧急/大宗订单, 某种情况下],
+      examples: ["增加供应商不可用的异常场景"], status: active }
+  - { id: RU-01, name: 加改业务规则, category: 规则,
+      description_zh: 新增或修改业务规则, detection_keywords: [加规则, 改规则, 阈值, 必填, 校验, 限制],
+      examples: ["供应商必填且要校验有效性"], status: active }
+  - { id: RO-01, name: 加改角色, category: 角色,
+      description_zh: 新增或修改业务角色, detection_keywords: [新角色, 加个角色, 改职责, 审批人, 管理员],
+      examples: ["增加供应商管理员角色"], status: active }
+  - { id: FE-01, name: 加改子特性, category: 功能,
+      description_zh: 新增或调整一个子特性（业务能力）, detection_keywords: [新增功能, 加能力, 支持, 能不能也, 新子特性],
+      examples: ["订单支持批量导出"], status: active }
+  - { id: FE-02, name: 给子特性加操作或AC, category: 功能,
+      description_zh: 已有子特性增加操作或验收标准, detection_keywords: [加操作, 补验收, 操作步骤, 增加校验项, 改逻辑],
+      examples: ["订单创建增加选择供应商操作"], status: active }
+  - { id: UI-01, name: 页面加改控件字段防呆, category: 界面,
+      description_zh: 在已有页面增删字段/控件/防呆, detection_keywords: [加字段, 加按钮, 改控件, 加下拉, 防呆, 去掉字段],
+      examples: ["创建页加供应商下拉"], status: active }
+  - { id: UI-02, name: 新增前端组件, category: 界面,
+      description_zh: 新增一个前端组件, detection_keywords: [新组件, 加卡片, 加选择器, 复用组件, 新控件组件],
+      examples: ["加一个供应商卡片组件"], status: active }
+  - { id: DA-01, name: 实体聚合根加改字段, category: 数据,
+      description_zh: 实体或聚合根新增/修改字段, detection_keywords: [加字段, 新增属性, 表加列, 改字段, 加个 code],
+      examples: ["订单加 supplier_code 字段"], status: active }
+  - { id: DA-02, name: 加改状态机, category: 数据,
+      description_zh: 聚合根状态机新增/修改状态或转换, detection_keywords: [状态, 状态流转, 加状态, 状态机, 流转规则],
+      examples: ["订单增加冻结状态"], status: active }
+  - { id: DA-03, name: 加改值对象或数据字典, category: 数据,
+      description_zh: 新增/修改值对象或数据字典, detection_keywords: [值对象, 数据字典, 枚举值, 金额对象, 字典项],
+      examples: ["新增金额值对象"], status: active }
+  - { id: EV-01, name: 加改领域事件或订阅, category: 事件,
+      description_zh: 新增/修改领域事件或订阅方, detection_keywords: [事件, 发消息, 订阅, MQ, 通知下游],
+      examples: ["订单提交后发事件通知库存"], status: active }
+  - { id: IN-01, name: 加改对外集成, category: 集成,
+      description_zh: 新增或修改对外部系统的集成, detection_keywords: [对接, 集成, 调外部, 拉取系统数据, 接口对接],
+      examples: ["供应商列表从供应商系统拉取"], status: active }
+  - { id: LG-01, name: 加改跨聚合领域逻辑, category: 逻辑,
+      description_zh: 新增/修改跨聚合的领域逻辑, detection_keywords: [跨聚合, 领域服务, 业务校验逻辑, 跨实体计算],
+      examples: ["增加供应商有效性校验逻辑"], status: active }
+  - { id: LG-02, name: 加改用例编排或事务, category: 逻辑,
+      description_zh: 新增/修改用例编排或事务边界, detection_keywords: [编排, 用例, 事务, 流程编排, 调用顺序],
+      examples: ["下单编排里插入供应商校验"], status: active }
+  - { id: IF-01, name: 加改UIAPI, category: 接口,
+      description_zh: 新增或修改人机交互接口, detection_keywords: [接口, API, 加参数, 改契约, 新接口],
+      examples: ["创建订单接口加 supplierCode 参数"], status: active }
+  - { id: PM-01, name: 加改功能或数据权限, category: 权限,
+      description_zh: 新增/修改功能权限点或数据权限, detection_keywords: [权限, 权限点, 数据权限, 谁能看, 角色权限],
+      examples: ["采购员增加指定供应商权限"], status: active }
+  - { id: CF-01, name: 加改配置项或错误码, category: 配置,
+      description_zh: 新增/修改配置项或错误码字典, detection_keywords: [配置, 阈值配置, 错误码, 开关, 默认值],
+      examples: ["错误码字典加供应商无效"], status: active }
+  - { id: NF-01, name: 加改非功能DFX, category: 非功能,
+      description_zh: 新增/修改非功能诉求/指标/方案, detection_keywords: [性能, 安全, 响应, 并发, 缓存, 容错],
+      examples: ["供应商查询要快，走缓存"], status: active }
+  - { id: AR-01, name: 技术选型部署中间件变更, category: 架构,
+      description_zh: 技术选型/部署/中间件变更, detection_keywords: [技术选型, 换数据库, 加中间件, 部署, 架构调整],
+      examples: ["缓存从本地换 Redis 集群"], status: active }

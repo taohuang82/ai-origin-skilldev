@@ -1,0 +1,124 @@
+# ia-fe-generator · spec-template-registry.yaml
+# 每要素实现配置：主 agent Phase1 组装派发参数的唯一来源。
+# element_id 与 element-type-registry 的 element_type 严格对齐（大驼峰）。
+# artifact 全为 shared（FE 单文档）；execution 全 subAgent（interactive）；
+# depends_on / upstream 均据 registry/relations.yaml 派生（seq 为关系全局编号）。
+#
+# execution.dispatch 说明：
+#   subagent — 通过 Agent 工具派发 subAgent 执行（省上下文，交互有延迟）
+#   inline   — 主 agent 直接读 spec 按模板执行（响应快，消耗上下文）
+#   不填则继承 config.yaml 的 execution_dispatch 全局值
+
+spec_templates:
+
+  - element_id: "OriginalRequirement"
+    spec_file: "spec/original-requirement.md"
+    standards_refs: []
+    for_type: ["TP", "AP", "AI", "IT"]
+    execution_mode: ["build"]
+    artifact: { scope: "shared", heading: "原始需求" }
+    execution: { interactive: true }
+    depends_on: []                    # FE 分析起点：原始需求是所有后续要素的信息源
+    upstream: []
+    status: "active"
+
+  - element_id: "ProductOverview"
+    spec_file: "spec/product-overview.md"
+    standards_refs: []
+    for_type: ["TP", "AP", "AI", "IT"]
+    execution_mode: ["build"]
+    artifact: { scope: "shared", heading: "产品总览" }
+    execution: { interactive: true }
+    depends_on: ["OriginalRequirement"]   # 基于原始需求提炼产品全貌
+    upstream: []
+    status: "active"
+
+  - element_id: "BusinessProcess"
+    spec_file: "spec/business-process.md"
+    standards_refs: ["standards/business-process.md"]
+    for_type: ["TP", "AP", "AI", "IT"]
+    execution_mode: ["build"]
+    artifact: { scope: "shared", heading: "业务流程" }
+    execution: { interactive: true }
+    depends_on: ["ProductOverview"]       # 基于产品总览梳理端到端流程，流程中带出角色名/规则点
+    upstream: []
+    status: "active"
+
+  - element_id: "Role"
+    spec_file: "spec/role.md"
+    standards_refs: []
+    for_type: ["TP", "AP", "AI", "IT"]
+    execution_mode: ["build"]
+    artifact: { scope: "shared", heading: "角色" }
+    execution: { interactive: true }
+    depends_on: ["BusinessProcess"]       # 从业务流程的活动中识别参与角色，再详化职责边界
+    upstream:
+      - { via_element: "BusinessProcess", via_relation: { name: "uses", seq: 8 }, direction: "reverse",
+          read_purpose: "反查流程活动中出现的角色，据此识别并详化角色清单", required: false }
+    status: "active"
+
+  - element_id: "BusinessRule"
+    spec_file: "spec/business-rule.md"
+    standards_refs: []
+    for_type: ["TP", "AP", "AI", "IT"]
+    execution_mode: ["build"]
+    artifact: { scope: "shared", heading: "业务规则" }
+    execution: { interactive: true }
+    depends_on: ["BusinessProcess"]       # 从业务流程活动的约束点识别规则，再详化
+    upstream:
+      - { via_element: "BusinessProcess", via_relation: { name: "uses", seq: 9 }, direction: "reverse",
+          read_purpose: "反查流程活动中的约束点，据此识别并详化业务规则", required: false }
+    status: "active"
+
+  - element_id: "SubFeature"
+    spec_file: "spec/sub-feature.md"
+    standards_refs: []
+    for_type: ["TP", "AP", "AI", "IT"]
+    execution_mode: ["build"]
+    artifact: { scope: "shared", heading: "子特性" }
+    execution: { interactive: true }
+    depends_on: ["BusinessProcess", "BusinessRule"]
+    upstream:
+      - { via_element: "BusinessProcess", via_relation: { name: "uses", seq: 9 }, direction: "reverse",
+          read_purpose: "据业务流程拆解可交付的业务功能点（子特性）", required: false }
+      - { via_element: "Role", via_relation: { name: "uses", seq: 11 }, direction: "forward",
+          read_purpose: "读角色定义，填 performed_by_roles", required: false }
+    # 注：feature(part_of Feature seq3) FE 阶段填特性名字符串（源侧单端存储）；PRD 建 Feature 实例后与之对齐。
+    status: "active"
+
+  - element_id: "Page"
+    spec_file: "spec/page.md"
+    standards_refs: ["standards/page.md"]
+    for_type: ["TP", "AP", "AI", "IT"]
+    execution_mode: ["build"]
+    artifact: { scope: "shared", heading: "页面" }
+    execution: { interactive: true }
+    depends_on: ["SubFeature"]
+    upstream:
+      - { via_element: "SubFeature", via_relation: { name: "realizes", seq: 28 }, direction: "forward",
+          read_purpose: "读子特性，填 realizes_sub_features（页面实现哪些子特性）", required: true }
+    status: "active"
+
+  - element_id: "NonFunctional"
+    spec_file: "spec/non-functional.md"
+    standards_refs: []
+    for_type: ["TP", "AP", "AI", "IT"]
+    execution_mode: ["build"]
+    artifact: { scope: "shared", heading: "非功能" }
+    execution: { interactive: true }
+    depends_on: ["SubFeature", "Page"]
+    upstream:
+      - { via_element: "SubFeature", via_relation: { name: "uses", seq: 35 }, direction: "forward",
+          read_purpose: "读子特性/页面，填 applies_to（非功能作用于谁）", required: true }
+    status: "active"
+
+  - element_id: "Glossary"
+    spec_file: "spec/glossary.md"
+    standards_refs: []
+    for_type: ["TP", "AP", "AI", "IT"]
+    execution_mode: ["build"]
+    artifact: { scope: "shared", heading: "概念术语" }
+    execution: { interactive: false }     # 术语通常无需逐条确认
+    depends_on: ["NonFunctional"]         # 术语收尾：汇总全部要素中出现的术语
+    upstream: []
+    status: "active"
